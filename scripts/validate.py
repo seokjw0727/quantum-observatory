@@ -5,6 +5,7 @@ import re
 import sys
 from pathlib import Path
 from html.parser import HTMLParser
+from urllib.parse import urlsplit
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from pipeline.content import load_articles,load_site_config
@@ -16,7 +17,7 @@ class Assets(HTMLParser):
     def handle_starttag(self,tag,attrs):
         attrs=dict(attrs)
         value=attrs.get('src') or (attrs.get('href') if tag=='link' else None)
-        if value and value.startswith('/'):self.paths.append(value)
+        if value and value.startswith('/'):self.paths.append(urlsplit(value).path)
 
 
 def validate(directory,production=False):
