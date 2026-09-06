@@ -10,6 +10,8 @@
     <meta name="theme-color" content="#f9fafb" />
     <title>Quantum Observatory — Weekly research</title>
     <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="/assets/fonts/dm-sans.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/assets/fonts/newsreader.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="/assets/style.css" />
     <script type="module" src="/assets/app.js"></script>
   </head>
@@ -21,12 +23,7 @@
           ><span class="brand-mark" aria-hidden="true">q.</span
           ><span>Quantum <strong>Observatory</strong></span></a
         >
-        <nav aria-label="Main navigation">
-          <a href="/" data-page="overview">Overview</a>
-          <a href="/research/" data-page="research">Research</a>
-          <a href="/archive/" data-page="archive">Archive</a>
-          <a href="/methodology/" data-page="methodology">Methodology</a>
-        </nav>
+
         <button
           id="theme-toggle"
           class="icon-button"
@@ -35,6 +32,17 @@
         >
           ◐
         </button>
+        <button id="menu-toggle" class="menu-toggle" aria-controls="main-nav" aria-expanded="false" aria-label="Open navigation">
+          <span class="menu-label">Menu</span><span class="menu-lines" aria-hidden="true"><span></span><span></span></span>
+        </button>
+        <nav id="main-nav" aria-label="Main navigation" tabindex="-1">
+          <div class="nav-links">
+          <a href="/" data-page="overview">Overview</a>
+          <a href="/research/" data-page="research">Research</a>
+          <a href="/archive/" data-page="archive">Archive</a>
+          <a href="/methodology/" data-page="methodology">Methodology</a>
+          </div>
+        </nav>
       </div>
     </header>
     <main id="main" tabindex="-1">
