@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.cache/
+.env*
+!.env.example
+node_modules/
+dist/
+dist-staging/
+deliverables/
+coverage/
+.DS_Store
+data/*
+!data/.gitkeep

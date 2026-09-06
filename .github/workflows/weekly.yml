@@ -1,0 +1,120 @@
+name: Collect and publish
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "pipeline/**"
+      - "config/**"
+      - "scripts/**"
+      - ".github/workflows/weekly.yml"
+  schedule:
+    - cron: "17 0 * * 1"
+  workflow_dispatch:
+    inputs:
+      collect:
+        description: Collect new data (false rebuilds the last saved snapshot)
+        type: boolean
+        default: true
+      deploy:
+        description: Deploy the validated snapshot to Cloudflare Pages
+        type: boolean
+        default: true
+permissions:
+  contents: read
+concurrency:
+  group: quantum-production
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Restore durable records and checkpoints
+        run: python3 scripts/git_data.py restore
+      - name: Test data invariants
+        run: npm test
+      - name: Collect source metadata
+        if: github.event_name != 'workflow_dispatch' || inputs.collect
+        env:
+          CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
+          OPENALEX_API_KEY: ${{ secrets.OPENALEX_API_KEY }}
+        run: python3 -u -m pipeline.collect
+      - name: Build and validate publication
+        run: |
+          python3 -m pipeline.build
+          node --check web/assets/app.js
+          node --check web/assets/core.js
+          python3 scripts/validate.py --production
+      - name: Persist successful source checkpoints
+        if: github.event_name != 'workflow_dispatch' || inputs.collect
+        run: python3 scripts/git_data.py persist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site-${{ github.run_id }}
+          path: dist
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: error
+      - name: Preserve diagnostic manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: collection-status-${{ github.run_id }}
+          path: data/last-attempt.json
+          if-no-files-found: ignore
+          retention-days: 30
+  deploy:
+    needs: build
+    if: vars.PAGES_PROJECT_NAME != '' && (github.event_name != 'workflow_dispatch' || inputs.deploy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: production
+      url: ${{ vars.SITE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          name: site-${{ github.run_id }}
+          path: dist
+      - name: Validate deployment configuration
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          python3 - <<'PY'
+          import os
+          required = ['CLOUDFLARE_ACCOUNT_ID', 'CLOUDFLARE_API_TOKEN', 'SITE_URL']
+          missing = [key for key in required if not os.environ.get(key)]
+          if missing:
+              raise SystemExit('Missing deployment settings: ' + ', '.join(missing))
+          PY
+      - name: Upload to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ vars.PAGES_PROJECT_NAME }} --branch=main
+      - name: Verify the deployed data version
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: python3 scripts/verify_deployment.py

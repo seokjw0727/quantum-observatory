@@ -1,0 +1,33 @@
+name: Validate
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Data integrity and frontend logic
+        run: npm test
+      - name: Validate JavaScript syntax
+        run: |
+          node --check web/assets/app.js
+          node --check web/assets/core.js
+      - name: Validate static build with isolated fixtures
+        run: |
+          python3 scripts/ci_snapshot.py
+          python3 -m pipeline.build --data-dir .cache/ci-data
+          python3 scripts/validate.py

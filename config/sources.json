@@ -1,0 +1,80 @@
+[
+  {
+    "id": "arxiv",
+    "name": "arXiv",
+    "kind": "preprint",
+    "adapter": "arxiv",
+    "url": "https://arxiv.org/list/quant-ph/recent",
+    "required": true,
+    "enabled": true,
+    "query": "cat:quant-ph",
+    "page_size": 1000,
+    "max_pages": 30
+  },
+  {
+    "id": "crossref",
+    "name": "Crossref",
+    "kind": "journal_article",
+    "adapter": "crossref",
+    "url": "https://www.crossref.org/",
+    "required": false,
+    "enabled": true,
+    "issns": ["2691-3399", "2521-327X", "2056-6387"],
+    "page_size": 500,
+    "max_pages": 30
+  },
+  {
+    "id": "qip2026",
+    "name": "QIP 2026",
+    "kind": "talk",
+    "adapter": "qip",
+    "url": "https://qip2026.lu.lv/programme/accepted-papers/",
+    "required": false,
+    "enabled": true,
+    "venue": "QIP 2026 · Riga",
+    "event_start": "2026-01-26",
+    "event_end": "2026-01-30"
+  },
+  {
+    "id": "nqi",
+    "name": "National Quantum Initiative",
+    "kind": "report",
+    "adapter": "reports",
+    "url": "https://www.quantum.gov/publications-and-resources/",
+    "required": false,
+    "enabled": true
+  },
+  {
+    "id": "gao",
+    "name": "U.S. GAO",
+    "kind": "report",
+    "adapter": "gao",
+    "url": "https://www.gao.gov/products/gao-26-107759",
+    "required": false,
+    "enabled": true,
+    "note": "Monitors configured report pages; new GAO reports require adding a URL."
+  },
+  {
+    "id": "osti",
+    "name": "DOE OSTI",
+    "kind": "report",
+    "adapter": "osti",
+    "url": "https://www.osti.gov/",
+    "required": false,
+    "enabled": true,
+    "page_size": 100,
+    "max_pages": 100,
+    "query": "quantum",
+    "note": "Discovers DOE technical reports through the official API; includes only records with a research-topic match."
+  },
+  {
+    "id": "openalex",
+    "name": "OpenAlex",
+    "kind": "enrichment",
+    "adapter": "openalex",
+    "url": "https://openalex.org/",
+    "required": false,
+    "enabled": true,
+    "max_enrichment": 100
+  }
+]

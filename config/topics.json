@@ -1,0 +1,133 @@
+{
+  "algorithms": {
+    "label": "Algorithms & complexity",
+    "short": "Algorithms",
+    "color": "#4361b3",
+    "patterns": [
+      "algorithm",
+      "complexity",
+      "quantum advantage",
+      "quantum search",
+      "phase estimation",
+      "quantum optimization",
+      "qcma",
+      "query complexity"
+    ]
+  },
+  "simulation": {
+    "label": "Quantum simulation",
+    "short": "Simulation",
+    "color": "#568c7d",
+    "patterns": [
+      "simulat",
+      "many-body",
+      "many body",
+      "hamiltonian",
+      "gibbs state",
+      "tensor network",
+      "quantum dynamics"
+    ]
+  },
+  "error-correction": {
+    "label": "Error correction",
+    "short": "Error correction",
+    "color": "#8576b3",
+    "patterns": [
+      "error correct",
+      "error-correct",
+      "fault toleran",
+      "fault-toleran",
+      "surface code",
+      "ldpc",
+      "decod",
+      "logical qubit",
+      "code switching"
+    ]
+  },
+  "hardware": {
+    "label": "Hardware & control",
+    "short": "Hardware",
+    "color": "#bf9155",
+    "patterns": [
+      "superconduct",
+      "trapped ion",
+      "ion trap",
+      "neutral atom",
+      "rydberg",
+      "photonic",
+      "quantum dot",
+      "calibrat",
+      "quantum control",
+      "transmon",
+      "optomechan",
+      "gate fidel",
+      "quantum processor"
+    ]
+  },
+  "information": {
+    "label": "Quantum information theory",
+    "short": "Information theory",
+    "color": "#5997a9",
+    "patterns": [
+      "entangle",
+      "entropy",
+      "entropies",
+      "quantum channel",
+      "nonlocal",
+      "non-local",
+      "quantum correlation",
+      "resource theor",
+      "quantum state",
+      "hypothesis test",
+      "bell inequal",
+      "quantum magic"
+    ]
+  },
+  "communication": {
+    "label": "Communication & cryptography",
+    "short": "Communication",
+    "color": "#a47585",
+    "patterns": [
+      "cryptograph",
+      "encryption",
+      "quantum network",
+      "quantum communicat",
+      "key distribution",
+      "quantum repeater",
+      "quantum internet",
+      "uncloneable"
+    ]
+  },
+  "software": {
+    "label": "Software & compilation",
+    "short": "Software",
+    "color": "#7a8caa",
+    "patterns": [
+      "compil",
+      "circuit synthesis",
+      "cnot circuit",
+      "circuit optim",
+      "benchmark",
+      "quantum software",
+      "quantum program",
+      "t gates",
+      "t-depth",
+      "circuit depth",
+      "quantisation of abstract data"
+    ]
+  },
+  "quantum-ai": {
+    "label": "Quantum × AI",
+    "short": "Quantum × AI",
+    "color": "#8d9970",
+    "patterns": [
+      "machine learn",
+      "neural network",
+      "reinforcement learn",
+      "quantum learn",
+      "artificial intelligence",
+      "deep learn",
+      "language model"
+    ]
+  }
+}
