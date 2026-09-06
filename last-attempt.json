@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "run_id": "20260906T043858Z",
-  "last_success": "2026-09-06T04:38:58.493081+00:00",
+  "run_id": "20260906T104702Z",
+  "last_success": "2026-09-06T10:47:02.506579+00:00",
   "sources": {
     "qip2026": {
       "status": "success",
       "fetched": 158,
       "included": 158,
-      "last_success": "2026-09-06T04:38:58.493081+00:00",
+      "last_success": "2026-09-06T10:47:02.506579+00:00",
       "covered_from": "2026-06-08",
       "message": "Completed",
       "query_from": "2026-06-08"
@@ -40,7 +40,7 @@
       "status": "success",
       "fetched": 7829,
       "included": 6380,
-      "last_success": "2026-09-06T04:38:58.493081+00:00",
+      "last_success": "2026-09-06T10:47:02.506579+00:00",
       "covered_from": "2026-06-08",
       "message": "Completed",
       "query_from": "2026-06-08"
@@ -60,10 +60,10 @@
     }
   },
   "record_count": 6686,
-  "content_hash": "54a42e5b7d9cc156d424ab1e59c7672a1bddbb43aa349cbe4fca10b9bb957b82",
-  "code_sha": "c6b5c40aec11efc36b61476ce8eb21e8250161d7",
+  "content_hash": "d881c5bf440c4eabe7a316a5f66e29fdfb078f34d2c7b54e64a74406d7afddad",
+  "code_sha": "09c6723f3107eda0c62d1c092260d5d873881865",
   "baseline": "2026-06-08",
   "initial_backfill": false,
   "status": "partial",
-  "attempted_at": "2026-09-06T04:38:58.493081+00:00"
+  "attempted_at": "2026-09-06T10:47:02.506579+00:00"
 }
