@@ -16,6 +16,7 @@ class EditorialContent(unittest.TestCase):
         self.assertEqual(site['ads']['mode'],'verification')
         self.assertEqual(site['ads']['publisher_id'],'pub-8724183999332964')
         self.assertEqual(site['ads']['ads_txt'],'google.com, pub-8724183999332964, DIRECT, f08c47fec0942fa0')
+        self.assertEqual(site['search_console_verification_file'],'googlee349e1ba1c0c0b38.html')
         self.assertEqual(site['canonical_origin'],'https://qobservatory.com')
 
 

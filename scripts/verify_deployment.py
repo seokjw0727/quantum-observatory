@@ -27,6 +27,7 @@ checks={
     '/privacy/':'Privacy policy',
     '/sitemap.xml':'https://qobservatory.com/analysis/',
     '/robots.txt':'Sitemap: https://qobservatory.com/sitemap.xml',
+    '/googlee349e1ba1c0c0b38.html':'google-site-verification: googlee349e1ba1c0c0b38.html',
 }
 for path,marker in checks.items():
     request=urllib.request.Request(url+path+'?build='+expected,headers=headers)

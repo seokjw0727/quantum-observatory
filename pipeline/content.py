@@ -31,6 +31,9 @@ def load_site_config():
     for key in ["publisher_name", "repository_url", "contact_url"]:
         if not config.get(key):
             raise ValueError(f"Missing site setting: {key}")
+    verification_file = config.get("search_console_verification_file", "")
+    if not re.fullmatch(r"google[a-z0-9]+\.html", verification_file):
+        raise ValueError("Invalid Search Console verification filename")
     return config
 
 

@@ -57,6 +57,9 @@ def validate(directory,production=False):
         assert canonical.group(1) in sitemap,f'Canonical missing from sitemap: {relative}'
     robots=(root/'robots.txt').read_text(encoding='utf-8')
     assert 'User-agent: *' in robots and site['canonical_origin']+'/sitemap.xml' in robots,'Invalid robots.txt'
+    verification_file=site['search_console_verification_file']
+    expected_verification=f'google-site-verification: {verification_file}'
+    assert (root/verification_file).read_text(encoding='utf-8').strip()==expected_verification,'Invalid Search Console verification file'
     ad_code_absent=all('adsbygoogle' not in path.read_text(encoding='utf-8',errors='ignore') for path in root.rglob('*') if path.is_file())
     if site['ads']['mode']=='off':
         assert not (root/'ads.txt').exists(),'ads.txt must not contain an invented publisher ID'
