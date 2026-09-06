@@ -1,3 +1,4 @@
+import { enhanceSelects } from "./selects.js";
 import { setupNavigation, revealPage, closeDetail } from "./motion.js";
 import {
   KINDS,
@@ -349,6 +350,7 @@ function renderPage() {
       document.querySelector("#week-select").value = "all";
     renderResults();
     bindFilters();
+    enhanceSelects(app);
   }
 }
 async function openDetail(id) {
