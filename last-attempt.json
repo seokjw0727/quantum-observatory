@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "run_id": "20260906T125716Z",
-  "last_success": "2026-09-06T12:57:16.787420+00:00",
+  "run_id": "20260906T130033Z",
+  "last_success": "2026-09-06T13:00:33.916508+00:00",
   "sources": {
     "qip2026": {
       "status": "success",
       "fetched": 158,
       "included": 158,
-      "last_success": "2026-09-06T12:57:16.787420+00:00",
+      "last_success": "2026-09-06T13:00:33.916508+00:00",
       "covered_from": "2026-06-08",
       "message": "Completed",
       "query_from": "2026-06-08"
@@ -16,7 +16,7 @@
       "status": "success",
       "fetched": 1,
       "included": 1,
-      "last_success": "2026-09-06T12:57:16.787420+00:00",
+      "last_success": "2026-09-06T13:00:33.916508+00:00",
       "covered_from": "2026-06-08",
       "message": "Completed",
       "query_from": "2026-06-08"
@@ -25,7 +25,7 @@
       "status": "success",
       "fetched": 3663,
       "included": 1899,
-      "last_success": "2026-09-06T12:57:16.787420+00:00",
+      "last_success": "2026-09-06T13:00:33.916508+00:00",
       "covered_from": "2026-06-08",
       "message": "Completed",
       "query_from": "2026-06-08"
@@ -34,7 +34,7 @@
       "status": "success",
       "fetched": 203,
       "included": 203,
-      "last_success": "2026-09-06T12:57:16.787420+00:00",
+      "last_success": "2026-09-06T13:00:33.916508+00:00",
       "covered_from": "2026-06-08",
       "message": "Completed",
       "query_from": "2026-06-08"
@@ -43,7 +43,7 @@
       "status": "success",
       "fetched": 7829,
       "included": 6380,
-      "last_success": "2026-09-06T12:57:16.787420+00:00",
+      "last_success": "2026-09-06T13:00:33.916508+00:00",
       "covered_from": "2026-06-08",
       "message": "Completed",
       "query_from": "2026-06-08"
@@ -60,10 +60,10 @@
     }
   },
   "record_count": 8645,
-  "content_hash": "8cc52e57842cbc23e11561b53e9cb95886aafee16c84d874e684ec71c7880065",
-  "code_sha": "61de65aa1d64e1b9d8c978416f53c3599e16ca9a",
+  "content_hash": "e16558ab8f1657ba392b0e549df0be0efa992295ff262f10fd10bd16beb519bc",
+  "code_sha": "8fec48f7d12020133d65c9a6a1ea3e52672ee918",
   "baseline": "2026-06-08",
   "initial_backfill": false,
   "status": "success",
-  "attempted_at": "2026-09-06T12:57:16.787420+00:00"
+  "attempted_at": "2026-09-06T13:00:33.916508+00:00"
 }
