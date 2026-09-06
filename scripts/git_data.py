@@ -36,7 +36,7 @@ def restore(directory):
 
 def persist(directory):
     directory=Path(directory).resolve()
-    state=json.loads((directory/'state.json').read_text())
+    state=json.loads((directory/'state.json').read_text(encoding='utf-8'))
     remote=exists_remote()
     if remote:git('fetch','origin','data','--depth=1')
     with tempfile.TemporaryDirectory(prefix='quantum-data-') as parent:

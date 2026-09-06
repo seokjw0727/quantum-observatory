@@ -14,7 +14,7 @@ from .model import ROOT, atomic_json, day, merge_records, week_start
 def read_records(directory):
     result=[]
     for file in sorted((Path(directory)/'records').glob('*.jsonl')):
-        result.extend(json.loads(line) for line in file.read_text().splitlines() if line.strip())
+        result.extend(json.loads(line) for line in file.read_text(encoding='utf-8').splitlines() if line.strip())
     return result
 
 
@@ -24,7 +24,7 @@ def save_records(directory,records):
     for r in records:partitions.setdefault(r['source'],[]).append(r)
     for source,rows in partitions.items():
         path=directory/(source+'.jsonl');tmp=path.with_suffix('.tmp')
-        tmp.write_text(''.join(json.dumps(r,ensure_ascii=False,sort_keys=True)+'\n' for r in rows))
+        tmp.write_text(''.join(json.dumps(r,ensure_ascii=False,sort_keys=True)+'\n' for r in rows),encoding='utf-8')
         tmp.replace(path)
 
 
@@ -34,10 +34,10 @@ def collect(args):
     stamp=now.isoformat();run_id=now.strftime('%Y%m%dT%H%M%SZ')
     directory=Path(args.data_dir);directory.mkdir(parents=True,exist_ok=True)
     state_file=directory/'state.json'
-    previous=json.loads(state_file.read_text()) if state_file.exists() else {}
+    previous=json.loads(state_file.read_text(encoding='utf-8')) if state_file.exists() else {}
     initial=not previous.get('last_success')
     baseline=week_start(day(stamp))-timedelta(weeks=args.weeks)
-    sources=json.loads((ROOT/'config/sources.json').read_text())
+    sources=json.loads((ROOT/'config/sources.json').read_text(encoding='utf-8'))
     if args.sources:
         chosen=set(args.sources.split(','))
         for s in sources:s['enabled']=s['enabled'] and s['id'] in chosen
@@ -53,8 +53,10 @@ def collect(args):
             rows=ADAPTERS[source['adapter']](source,start,stamp,fetcher,initial=not old_state.get('last_success'))
             # Keep all conference/report entries; require a topic match for physics/journal results.
             filtered=[r for r in rows if r['kind'] in {'talk','report'} or r['topics']]
+            previous_coverage=old_state.get('covered_from')
+            covered_from=min(previous_coverage,start.isoformat()) if previous_coverage else start.isoformat()
             return sid,filtered,dict(status='success',fetched=len(rows),included=len(filtered),last_success=stamp,
-                    covered_from=min(old_state.get('covered_from',start.isoformat()),start.isoformat()),
+                    covered_from=covered_from,
                     message='Completed',query_from=start.isoformat())
         except Exception as e:
             # Error strings from adapters are sanitized and never contain authentication headers.
@@ -73,7 +75,7 @@ def collect(args):
         atomic_json(directory/'last-attempt.json',dict(run_id=run_id,attempted_at=stamp,status='failed',sources=outcomes))
         print('Required sources failed; published records and successful checkpoints were preserved.',file=sys.stderr)
         return 1
-    overrides=json.loads((ROOT/'config/overrides.json').read_text())
+    overrides=json.loads((ROOT/'config/overrides.json').read_text(encoding='utf-8'))
     records=merge_records(old,incoming,overrides)
     for source in sources:
         if source['adapter']=='openalex' and source['enabled']:

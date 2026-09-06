@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "python3 -m pipeline.build",
-    "collect": "python3 -m pipeline.collect",
-    "test": "python3 -m unittest discover -s tests -v && node --test tests/frontend.test.mjs",
-    "check": "node --check web/assets/app.js && node --check web/assets/core.js && python3 scripts/validate.py",
-    "preview": "python3 -m http.server 8080 --directory dist"
+    "build": "python -m pipeline.build",
+    "collect": "python -m pipeline.collect",
+    "test": "python -m unittest discover -s tests -v && node --test tests/frontend.test.mjs",
+    "check": "node --check web/assets/app.js && node --check web/assets/common.js && node --check web/assets/core.js && python scripts/validate.py",
+    "preview": "python -m http.server 8080 --directory dist"
   },
   "engines": {
     "node": ">=22"

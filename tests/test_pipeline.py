@@ -7,7 +7,7 @@ from unittest.mock import patch
 from argparse import Namespace
 
 from pipeline.model import make_record,merge_records,group_works,doi_id,arxiv_id,day,week_start,validate,clean
-from pipeline.adapters import parse_arxiv,parse_crossref,parse_qip,parse_gao,parse_osti
+from pipeline.adapters import parse_arxiv,parse_crossref,parse_qip,parse_gao,parse_osti,collect_osti,collect_configured_report
 from pipeline.aggregate import aggregate
 from pipeline.collect import collect,save_records,read_records
 
@@ -71,6 +71,10 @@ class DataIntegrity(unittest.TestCase):
         r=parse_crossref([{'DOI':'10.1234/a','title':['Quantum channels'],'published':{'date-parts':[[2026,9]]}}],NOW)[0]
         self.assertIsNone(r['published_at']);self.assertEqual(r['date_precision'],'month')
 
+    def test_crossref_missing_year_is_unknown_instead_of_crashing(self):
+        r=parse_crossref([{'DOI':'10.1234/a','title':['Quantum channels'],'published':{'date-parts':[[None]]}}],NOW)[0]
+        self.assertIsNone(r['published_at']);self.assertEqual(r['date_precision'],'unknown')
+
     def test_qip_nested_merge_entries_and_author_separator(self):
         body=b'<ol><li>Merge<ol><li><u>Quantum algorithm one:</u> Alice, Bob</li><li><u>Quantum algorithm two</u>: Carol, Dave</li></ol></li><li><u>Quantum algorithm three:</u> Eve</li></ol>'
         source=dict(id='qip',url='https://example.org/qip',venue='QIP',event_start='2026-01-26',event_end='2026-01-30')
@@ -83,6 +87,25 @@ class DataIntegrity(unittest.TestCase):
         items=[dict(osti_id='1',title='Quantum algorithms',product_type='Technical Report',publication_date='2026-09-01T00:00:00Z'),
                dict(osti_id='2',title='Quantum data',product_type='Dataset')]
         rows=parse_osti(items,NOW);self.assertEqual(len(rows),1);self.assertEqual(rows[0]['published_at'],'2026-09-01')
+
+    def test_osti_uses_title_query_and_stops_on_short_page(self):
+        class Fetcher:
+            params=None
+            def get(self,url,params):
+                self.params=params
+                return json.dumps([dict(osti_id='1',title='Quantum algorithms',product_type='Technical Report',publication_date='2026-09-01')])
+        fetcher=Fetcher();source=dict(query='quantum',page_size=100,max_pages=2)
+        rows=collect_osti(source,date(2026,9,1),NOW,fetcher)
+        self.assertEqual(len(rows),1);self.assertEqual(fetcher.params['title'],'quantum');self.assertNotIn('search',fetcher.params)
+
+    def test_configured_report_is_explicit_and_does_not_fetch(self):
+        class Fetcher:
+            def get(self,*args):raise AssertionError('configured report must not fetch')
+        source=dict(id='gao',name='U.S. GAO',url='https://www.gao.gov/products/gao-26-107759',
+                    title='Quantum Computing: Updating the National Strategy',published_at='2026-03-18',
+                    reviewed_at='2026-09-06',authors=['U.S. Government Accountability Office'])
+        row=collect_configured_report(source,date(2026,1,1),NOW,Fetcher())[0]
+        self.assertEqual(row['published_at'],'2026-03-18');self.assertEqual(row['provenance']['method'],'reviewed-config-v1')
 
     def test_required_source_failure_preserves_snapshot(self):
         with tempfile.TemporaryDirectory() as directory:

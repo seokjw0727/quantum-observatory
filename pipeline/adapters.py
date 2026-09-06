@@ -103,7 +103,8 @@ def collect_arxiv(source, start, now, fetcher, initial=False):
 def crossref_date(item):
     for key in ['published-online','published-print','published','issued']:
         parts=item.get(key,{}).get('date-parts',[[]])[0]
-        if parts and parts[0]>1900:
+        year=parts[0] if parts else None
+        if isinstance(year,int) and year>1900:
             return '-'.join(str(x).zfill(4 if i==0 else 2) for i,x in enumerate(parts)), ['year','month','day'][min(3,len(parts))-1]
     return None,'unknown'
 
@@ -237,6 +238,16 @@ def collect_gao(source,start,now,fetcher,initial=False):
     return parse_gao(fetcher.get(source['url']),source,now)
 
 
+def collect_configured_report(source,start,now,fetcher,initial=False):
+    """Return one maintainer-reviewed public report without pretending to crawl a feed."""
+    published=source.get('published_at')
+    if not published or not source.get('title'):
+        raise ValueError('Configured report requires title and published_at')
+    return [make_record(source['id'],source['url'],source['title'],'report',source['url'],now,
+        authors=source.get('authors',[]),venue=source['name'],published_at=published,
+        provenance={'method':'reviewed-config-v1','reviewed_at':source.get('reviewed_at',published)})]
+
+
 def parse_osti(items,now):
     result=[]
     for item in items:
@@ -256,7 +267,10 @@ def parse_osti(items,now):
 def collect_osti(source,start,now,fetcher,initial=False):
     result=[];seen=set()
     for page in range(1,source.get('max_pages',100)+1):
-        params={'search':source.get('query','quantum'),'rows':source.get('page_size',100),'page':page,
+        # Search the title because the downstream classifier also requires a title
+        # topic match. A full-record q search returns thousands of unrelated files.
+        params={'title':source.get('query','quantum'),'rows':source.get('page_size',100),'page':page,
+                'sort':'entry_date','order':'desc',
                 'publication_date_start' if initial else 'entry_date_start':start.strftime('%m/%d/%Y')}
         items=json.loads(fetcher.get('https://www.osti.gov/api/v1/records',params))
         if not isinstance(items,list):raise ValueError('Unexpected OSTI API response')
@@ -285,4 +299,4 @@ def enrich_openalex(records,source,now,fetcher):
     return records,{'status':'success','message':'DOI metadata enrichment; bounded per-run budget.','fetched':len(by_doi),'last_success':now}
 
 
-ADAPTERS={'arxiv':collect_arxiv,'crossref':collect_crossref,'qip':collect_qip,'reports':collect_reports,'gao':collect_gao,'osti':collect_osti}
+ADAPTERS={'arxiv':collect_arxiv,'crossref':collect_crossref,'qip':collect_qip,'reports':collect_reports,'gao':collect_gao,'configured_report':collect_configured_report,'osti':collect_osti}

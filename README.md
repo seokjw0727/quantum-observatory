@@ -1,18 +1,20 @@
 # Quantum Observatory
 
-A minimal, English-language research dashboard for quantum computing and quantum information. It collects public scholarly metadata weekly, links publication versions, and publishes a static website on Cloudflare Pages.
+An English-language research observatory for quantum computing and quantum information. It collects public scholarly metadata weekly, links publication versions, and combines the index with source-led analysis and practical reading guides.
 
 ## What works
 
 - Live arXiv collection, with pagination and a rolling overlap for updates.
 - Crossref metadata for PRX Quantum, Quantum, and npj Quantum Information.
 - Accepted-talk ingestion from the QIP 2026 official list, retaining conference date ranges.
-- DOE OSTI technical-report discovery, a configured GAO report monitor, and an NQI PDF-index adapter with explicit failure reporting.
+- DOE OSTI technical-report discovery and an explicitly reviewed GAO report record. The browser-rendered NQI library is documented but disabled until it exposes a stable public feed.
 - Optional, budget-bounded OpenAlex DOI enrichment.
 - Eight topic dictionaries, DOI/arXiv linking, immutable first-seen dates, and preserved revision events.
 - Weekly research counts, topic distributions, comparison eligibility, and an archive.
 - Title/author/identifier search, material/topic/source/date filters, grouped versions, pagination, CSV export, and on-demand abstract details.
 - Light/dark themes, responsive layouts, keyboard navigation, native detail dialogs, and chart data tables.
+- Crawlable route-specific HTML, ten original analysis and guide articles, and transparent editorial, privacy, and correction policies.
+- Advertising remains disabled until a real publisher ID, consent configuration, and reviewed placement are supplied.
 - GitHub Actions for validation, weekly collection, durable data-branch updates, and Cloudflare Pages Direct Upload.
 
 ## Implementation
@@ -22,7 +24,7 @@ The initial design proposed Astro/React. The first version uses plain HTML, CSS,
 Requirements: Python 3.12+ and Node.js 22+.
 
 ```bash
-python3 -m pipeline.collect
+python -m pipeline.collect
 npm test
 npm run build
 npm run check
@@ -44,6 +46,10 @@ Open `http://localhost:8080`. Browser search covers titles, authors, DOI, and ar
 | `config/sources.json` | Source URLs, limits, enabled/required flags |
 | `config/topics.json` | Topic labels, colors, and keyword rules |
 | `config/overrides.json` | Manual record corrections and explicit merges |
+| `config/site.json` | Canonical site identity and advertising mode |
+| `content/editorial.json` | Reviewed analysis and reading-guide source content |
+| `pipeline/content.py` | Editorial schema and publication validation |
+| `pipeline/render.py` | Static route, metadata, sitemap, and policy-page rendering |
 | `scripts/git_data.py` | Restore/persist the dedicated `data` branch |
 | `tests/` | Data-integrity and frontend-logic tests |
 | `.github/workflows/` | Validation and weekly publication |
@@ -104,7 +110,7 @@ To rebuild/deploy code changes without recollecting: manually run **Collect and 
 - Current/incomplete weeks, zero baselines, and mismatched source coverage do not receive growth percentages.
 - Publication metadata reconstructed today is not a historical snapshot of what was known then. First-seen history begins when this collector starts.
 - QIP accepted entries are not proof that each presentation was delivered. Conference-year URLs require an explicit config update. The exact individual talk time is not invented.
-- OSTI uses its API-provided publication calendar date. NQI PDFs without an explicit date stay undated, and remain discoverable under all dates. Upload-path dates are never treated as publication dates.
+- OSTI uses its API-provided publication calendar date. The NQI library is not collected automatically because its browser-rendered index does not expose a stable public feed. Upload-path dates are never treated as publication dates.
 - GAO is a configured-page monitor, not an exhaustive new-report search. DOE OSTI supplies automated technical-report discovery.
 - Crossref abstracts are not redistributed by default. arXiv abstract display links to its original record; PDFs remain at their source.
 - OpenAlex is optional. Without a key, the UI reports it as unconfigured. Its enrichment budget is capped in `sources.json`.

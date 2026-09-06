@@ -40,19 +40,24 @@
     "name": "National Quantum Initiative",
     "kind": "report",
     "adapter": "reports",
-    "url": "https://www.quantum.gov/publications-and-resources/",
+    "url": "https://www.quantum.gov/publications-and-resources/publication-library/",
     "required": false,
-    "enabled": true
+    "enabled": false,
+    "note": "The official library currently requires a browser-rendered index. Existing records are retained; automated collection is disabled until a stable public feed is available."
   },
   {
     "id": "gao",
     "name": "U.S. GAO",
     "kind": "report",
-    "adapter": "gao",
+    "adapter": "configured_report",
     "url": "https://www.gao.gov/products/gao-26-107759",
     "required": false,
     "enabled": true,
-    "note": "Monitors configured report pages; new GAO reports require adding a URL."
+    "title": "Quantum Computing: Updating the National Strategy Could Promote U.S. Leadership",
+    "published_at": "2026-03-18",
+    "reviewed_at": "2026-09-06",
+    "authors": ["U.S. Government Accountability Office"],
+    "note": "A maintainer-reviewed configured report, not an exhaustive GAO monitor. Additional reports require explicit review."
   },
   {
     "id": "osti",

@@ -6,6 +6,7 @@ on:
       - "web/**"
       - "pipeline/**"
       - "config/**"
+      - "content/**"
       - "scripts/**"
       - ".github/workflows/weekly.yml"
   schedule:
@@ -53,6 +54,7 @@ jobs:
         run: |
           python3 -m pipeline.build
           node --check web/assets/app.js
+          node --check web/assets/common.js
           node --check web/assets/core.js
           python3 scripts/validate.py --production
       - name: Persist successful source checkpoints

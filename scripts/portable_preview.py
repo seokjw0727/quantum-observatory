@@ -5,17 +5,20 @@ from pathlib import Path
 
 root=Path(__file__).resolve().parents[1]
 dist=root/'dist'
-template=(dist/'index.html').read_text()
+template=(dist/'index.html').read_text(encoding='utf-8')
 template=re.sub(r'\s*<link rel="icon"[^>]+>','',template)
-css=(dist/'assets/style.css').read_text()
+css=(dist/'assets/style.css').read_text(encoding='utf-8')
 template=re.sub(r'<link rel="stylesheet" href="/assets/style.css"\s*/?>',lambda m:'<style>'+css+'</style>',template)
-core=re.sub(r'\bexport ', '',(dist/'assets/core.js').read_text())
-app=(dist/'assets/app.js').read_text()
-app=re.sub(r'^import\s*\{.*?\}\s*from\s*[\"\'][^\"\']+[\"\'];\s*','',app,flags=re.S)
+parts=[]
+for name in ['core.js','motion.js','selects.js','common.js','app.js']:
+    source=(dist/'assets'/name).read_text(encoding='utf-8')
+    source=re.sub(r'^import\s+(?:\{.*?\}\s+from\s+)?[\"\'][^\"\']+[\"\'];\s*','',source,flags=re.S|re.M)
+    parts.append(re.sub(r'\bexport ', '',source))
+core,app='\n'.join(parts[:-1]),parts[-1]
 app=re.sub(r'const path\s*=\s*location\.pathname\.replace\([^;]+;',"const path=({overview:'',research:'/research',archive:'/archive',methodology:'/methodology'})[new URLSearchParams(location.search).get('view')||'overview'];",app)
 app=app.replace('const p = new URLSearchParams();',"const p = new URLSearchParams(); p.set('view',page);")
 app=app.replace('await fetch(', 'await resourceFetch(')
-payload={'/'+str(file.relative_to(dist)):json.loads(file.read_text()) for file in (dist/'data').rglob('*.json')}
+payload={'/'+str(file.relative_to(dist)).replace('\\','/'):json.loads(file.read_text(encoding='utf-8')) for file in (dist/'data').rglob('*.json')}
 data=json.dumps(payload,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')
 loader="""
 const offlineData=JSON.parse(document.querySelector('#snapshot-data').textContent);
@@ -35,5 +38,5 @@ template=re.sub(r'<script type="module" src="/assets/app.js"></script>','',templ
 script=(core+'\n'+loader+'\n'+app).replace('</script','<\\/script')
 template=template.replace('</body>',f'<script type="application/json" id="snapshot-data">{data}</script>\n<script type="module">{script}</script>\n</body>')
 out=root/'deliverables';out.mkdir(exist_ok=True)
-target=out/'quantum-observatory-preview.html';target.write_text(template)
+target=out/'quantum-observatory-preview.html';target.write_text(template,encoding='utf-8')
 print(f'Created portable preview: {target} ({target.stat().st_size:,} bytes)')

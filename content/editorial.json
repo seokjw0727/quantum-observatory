@@ -1,0 +1,534 @@
+{
+  "articles": [
+    {
+      "slug": "coverage-before-comparison",
+      "type": "analysis",
+      "title": "Check coverage before comparing two weeks",
+      "description": "A larger weekly count can reflect a fuller collection run rather than a change in research activity.",
+      "summary": "This analysis shows why source coverage, publication dates, and indexing delays must be checked before a weekly increase is interpreted as growth.",
+      "author": "Quantum Observatory",
+      "published_at": "2026-09-06",
+      "updated_at": "2026-09-06",
+      "status": "published",
+      "sections": [
+        {
+          "heading": "The count and the evidence are different things",
+          "paragraphs": [
+            "A weekly total looks like a simple measurement: place every new paper into a calendar interval and count the rows. In a research index, the visible number is also shaped by which sources answered, how far each query reached, and when a record entered an upstream database. A change in any of those conditions can move the count even when the underlying rate of research is unchanged.",
+            "Quantum Observatory therefore treats coverage as part of the result. A period is comparable only when the configured research sources report successful coverage extending through that period and the period itself is complete. Current weeks and weeks with a failed required comparison source do not receive a growth percentage. The absence of a percentage is useful information: it prevents a precise-looking claim that the available evidence cannot support."
+          ]
+        },
+        {
+          "heading": "Three dates answer three different questions",
+          "paragraphs": [
+            "The first public date asks when a research work became available. For a linked preprint and journal article, the earliest explicit publication date anchors the work. The first-collected date asks when this observatory encountered a particular source record. An upstream indexed date records when a service such as Crossref updated its own metadata. These dates can be separated by days, months, or more.",
+            "Using first-collected dates is appropriate for an operational question such as how many records the collector discovered this week. It is not a substitute for publication activity. Using an indexed date can make an API query efficient, but the returned work must still be assigned by its publication date. The interface keeps first-public and first-collected views separate so an indexing burst is not presented as a publication surge."
+          ]
+        },
+        {
+          "heading": "A comparison checklist",
+          "paragraphs": [
+            "Before interpreting a rise or decline, inspect the methodology and source status shown with the snapshot. Then verify that both periods use the same definition of a research work, the same time zone, and matching source coverage. Finally, look for late records or newly linked versions that may have changed a historical period after its first publication.",
+            "The order matters. Topic labels or individual papers can explain a change only after the measurement is comparable. Starting with an appealing paper and working backward risks turning a data-quality difference into a narrative about the field."
+          ],
+          "bullets": [
+            "Are both periods complete Monday-to-Monday intervals in Korea Standard Time?",
+            "Did every source needed for the comparison succeed with adequate coverage?",
+            "Are linked arXiv and journal versions counted once in both periods?",
+            "Did the older period change because a delayed record or explicit identifier was added?",
+            "Does a topic comparison acknowledge that one work can carry several topic labels?"
+          ]
+        },
+        {
+          "heading": "What a careful conclusion sounds like",
+          "paragraphs": [
+            "When the checks pass, a defensible statement is narrow: within this observatory’s selected sources, the number of newly public research works changed between two complete periods. That statement does not measure funding, scientific importance, experimental quality, or the whole quantum field. It also does not explain the cause by itself.",
+            "When the checks fail, the right result is not zero and not a guessed correction. The appropriate label is incomplete or unavailable, accompanied by the last successful source date. Readers can still browse the records that are present, but the site withholds a trend claim. This separation between discovery and inference is one of the main safeguards of the observatory."
+          ]
+        }
+      ],
+      "sources": [
+        {"label": "Crossref REST API filters", "url": "https://www.crossref.org/documentation/retrieve-metadata/rest-api/filter-names/", "note": "Documentation for publication and indexed-date filters used to retrieve metadata."},
+        {"label": "arXiv API user manual", "url": "https://info.arxiv.org/help/api/user-manual.html", "note": "Official description of arXiv API queries, results, and pagination."},
+        {"label": "Quantum Observatory methodology", "url": "https://qobservatory.com/methodology/", "note": "The observatory’s counting, linking, time-zone, and coverage rules."}
+      ]
+    },
+    {
+      "slug": "what-linked-versions-change",
+      "type": "analysis",
+      "title": "What linked versions change in a weekly count",
+      "description": "A preprint, revision, and journal article can describe one research work without being interchangeable records.",
+      "summary": "The observatory keeps source records separate for provenance while grouping only explicitly connected publication versions for research counts.",
+      "author": "Quantum Observatory",
+      "published_at": "2026-09-06",
+      "updated_at": "2026-09-06",
+      "status": "published",
+      "sections": [
+        {
+          "heading": "One work can have several public records",
+          "paragraphs": [
+            "Researchers often release a manuscript on arXiv, update it after feedback, and later publish a journal version. arXiv preserves version history under one identifier, while Crossref commonly exposes a DOI record for the journal article. A search index should retain both sources: the preprint shows early public history and revisions, and the DOI record identifies the version of record and journal metadata.",
+            "Counting every source record as a new piece of research would make publication workflows look like new discoveries. Quantum Observatory instead stores each record with its own provenance and groups records into a work when an explicit DOI, arXiv identifier, or reviewed correction connects them. The work’s earliest known public date determines its weekly research count."
+          ]
+        },
+        {
+          "heading": "Why title matching is not enough",
+          "paragraphs": [
+            "Titles change. A journal title may be shorter than a preprint title, punctuation can differ, and unrelated groups can use nearly identical phrases. Authors also change order or join later versions. A similarity score can suggest candidates for review, but automatically merging on title risks erasing distinct results and attaching the wrong publication history.",
+            "The observatory therefore accepts some temporary duplication rather than inventing a relationship. When a source exposes a reliable identifier link, the records can be grouped. A maintainer can also add a documented override after checking the original pages. The uncertainty stays visible until that evidence exists."
+          ]
+        },
+        {
+          "heading": "Grouping changes totals, not provenance",
+          "paragraphs": [
+            "Suppose an arXiv manuscript appears in June, receives a second revision in July, and receives a DOI in September. The research-work series records one June work. The revision remains an event, and the journal article remains a searchable September source record, but neither becomes a second research work. A publication-focused filter can still find the journal record.",
+            "This design prevents double counting without pretending the records are identical. Abstract availability, author spelling, venue, citation metadata, and access links can differ. The detail panel shows linked records so readers can choose the version appropriate to their purpose."
+          ],
+          "bullets": [
+            "Use the earliest explicit public date for the work-level timeline.",
+            "Retain later revisions as events rather than new works.",
+            "Keep each source URL and its retrieved metadata intact.",
+            "Expose manual merges as reviewable configuration.",
+            "Recalculate historical counts when a reliable link arrives later."
+          ]
+        },
+        {
+          "heading": "How to read a changing archive",
+          "paragraphs": [
+            "A historical weekly count is not a sealed newspaper edition. An indexing service can add an older paper, or a DOI can reveal that two records represent one work. The archive is recalculated from the latest verified relationships, so an older total may increase or decrease. That is a correction to the model, not evidence that research occurred retroactively.",
+            "For reproducible work, export the relevant records and retain the run identifier and build identifier shown in the data manifest. A later reader can then distinguish a changed dataset from a changed interpretation. The linked-version policy makes the total more meaningful, while the retained source records make the transformation inspectable."
+          ]
+        }
+      ],
+      "sources": [
+        {"label": "arXiv version availability", "url": "https://info.arxiv.org/help/availability.html", "note": "Official information about submissions and version availability."},
+        {"label": "Crossref relationships", "url": "https://www.crossref.org/documentation/schema-library/markup-guide-metadata-segments/relationships/", "note": "Crossref guidance for expressing relationships between research objects."},
+        {"label": "DOI Handbook", "url": "https://www.doi.org/doi-handbook/HTML/", "note": "The DOI Foundation’s reference for persistent identifiers and resolution."}
+      ]
+    },
+    {
+      "slug": "why-quantum-topic-counts-overlap",
+      "type": "analysis",
+      "title": "Why quantum topic counts overlap",
+      "description": "Quantum research crosses hardware, information, algorithms, and software, so a partition can hide useful relationships.",
+      "summary": "Multi-label topic rules support discovery, but their totals cannot be added or interpreted as exclusive market shares.",
+      "author": "Quantum Observatory",
+      "published_at": "2026-09-06",
+      "updated_at": "2026-09-06",
+      "status": "published",
+      "sections": [
+        {
+          "heading": "The categories answer a navigation question",
+          "paragraphs": [
+            "Quantum Observatory’s topic labels help a reader narrow a large corpus. They do not attempt to place every work into one definitive academic discipline. A paper about compiling a decoder for a superconducting surface-code experiment can reasonably match software, error correction, and hardware. Removing two of those labels would make at least two relevant searches worse.",
+            "The classifier uses visible keyword dictionaries against titles and available abstracts. This makes the rule inspectable and repeatable. It also means the label reflects language in the metadata, not a full expert reading of the paper. A missed synonym can produce no label, while a phrase used in a different context can produce an imperfect match."
+          ]
+        },
+        {
+          "heading": "Why percentages can exceed one hundred",
+          "paragraphs": [
+            "For each topic, the weekly share is the number of research works carrying that label divided by all research works in the same comparable week. Because the numerator sets overlap, adding the topic shares double-counts multi-topic work. A sum above one hundred percent is therefore expected and should not be presented as an error or a market allocation.",
+            "The same issue affects raw counts. Eight topic totals cannot be summed to recover the total number of works. The correct denominator is the separately grouped research-work total. Topic bars are best read one at a time or compared with the same topic in another period after coverage checks."
+          ]
+        },
+        {
+          "heading": "A rising label has a narrow meaning",
+          "paragraphs": [
+            "The interface can mark a topic as gaining share when its proportion in a complete week is above its average proportion across the previous four comparable weeks and at least five works match it in the selected week. This identifies a change in the observatory’s tagged corpus. It does not establish that the topic is scientifically more important, commercially larger, or receiving more funding.",
+            "Vocabulary can also change. If a new term enters common use before the dictionary is updated, activity can be understated. If the dictionary changes, historical records are reclassified during a rebuild. Reproducible analysis must therefore record the classification version as well as the data snapshot."
+          ],
+          "bullets": [
+            "Compare a topic with its own prior share, not with an exclusive-category assumption.",
+            "Open several matching records to check whether the phrase is being used as expected.",
+            "Treat an untagged result as unclassified, not irrelevant.",
+            "Record the topic dictionary version when publishing a derived chart.",
+            "Do not infer quality, impact, or funding from tag frequency."
+          ]
+        },
+        {
+          "heading": "Where human review belongs",
+          "paragraphs": [
+            "Rules are useful for a browseable weekly index because they apply consistently and can be inspected. They are not sufficient for an editorial claim such as one research approach replacing another. That claim requires reading the relevant works, defining what counts as an approach, and checking whether source coverage or terminology changed.",
+            "The observatory separates these jobs. Automated tags organize the research library; editorial analysis states its selection criteria and limitations. Readers can follow every item to its source and can report a misclassification. This makes disagreement actionable without disguising a lightweight discovery tool as a scientific taxonomy."
+          ]
+        }
+      ],
+      "sources": [
+        {"label": "Quantum Observatory topic configuration", "url": "https://github.com/seokjw0727/quantum-observatory/blob/master/config/topics.json", "note": "The published keyword dictionaries used by the classifier."},
+        {"label": "Quantum Observatory methodology", "url": "https://qobservatory.com/methodology/", "note": "Definitions for topic share, rising topics, and overlapping labels."},
+        {"label": "Library of Congress: faceted application", "url": "https://www.loc.gov/catworkshop/fundamentals/part4.html", "note": "Background on using multiple facets to support retrieval rather than a single hierarchy."}
+      ]
+    },
+    {
+      "slug": "citations-are-context-not-rankings",
+      "type": "analysis",
+      "title": "Citation counts are context, not a ranking",
+      "description": "A citation total is tied to a source, retrieval date, field, and publication history.",
+      "summary": "Citation metadata can help readers orient themselves, but it cannot fairly rank new work or replace reading the evidence.",
+      "author": "Quantum Observatory",
+      "published_at": "2026-09-06",
+      "updated_at": "2026-09-06",
+      "status": "published",
+      "sections": [
+        {
+          "heading": "A count is a dated observation",
+          "paragraphs": [
+            "Citation databases update as they ingest references, merge records, and correct metadata. Two services can report different totals for the same paper because they index different documents and resolve references differently. A number without its provider and retrieval date is therefore incomplete.",
+            "Quantum Observatory stores citation data only as supplementary metadata and displays an as-of date when one is available. The research list is ordered by relevant dates rather than citation rank. This avoids turning an unstable enrichment field into the organizing principle of a weekly discovery tool."
+          ]
+        },
+        {
+          "heading": "Age and field distort simple comparisons",
+          "paragraphs": [
+            "Older work has had more time to be discovered and cited. Large or fast-moving research communities also create more citing documents than smaller specialties. A methods paper, dataset, or review can accumulate citations for reasons different from a focused experimental result. Comparing raw totals across those conditions rewards exposure and document type along with influence.",
+            "Recent quantum research faces an additional delay: a preprint may be read immediately, while formal reference lists and indexing updates appear later. A low total in the first months says little about the eventual usefulness or validity of the result."
+          ]
+        },
+        {
+          "heading": "What citation metadata can do",
+          "paragraphs": [
+            "A dated count can signal that a paper has entered a larger conversation, help identify foundational references for closer reading, or reveal a record-linking problem when two versions have unexpectedly separate histories. It is a starting point for investigation rather than a conclusion.",
+            "When an analysis uses citations, it should define the database, retrieval date, document set, treatment of versions, and reason the count is relevant. If the purpose is to compare influence, field- and age-normalized measures may be more suitable, but those measures still depend on modeling choices that must be stated."
+          ],
+          "bullets": [
+            "Open the citing works when the nature of the attention matters.",
+            "Check whether preprint and journal records are merged by the provider.",
+            "Compare papers of similar age and research context when possible.",
+            "Do not present citations as evidence that a claim is correct.",
+            "Keep the retrieval date beside every reported count."
+          ]
+        },
+        {
+          "heading": "Why the observatory keeps the number secondary",
+          "paragraphs": [
+            "The primary task here is to discover current research and follow it to the original source. Title, authors, version links, dates, topic labels, and source provenance support that task directly. A citation total can add context in a detail view, but ranking by it would systematically push older and more heavily indexed work ahead of new results.",
+            "The conservative choice is to expose provenance and age, avoid badges such as trending or top paper based on citations, and allow the reader to judge the work’s methods and evidence. The count remains available when useful, but the interface does not convert it into a quality score."
+          ]
+        }
+      ],
+      "sources": [
+        {"label": "DORA declaration", "url": "https://sfdora.org/read/", "note": "Recommendations against using journal-based metrics as a substitute for assessing individual research."},
+        {"label": "Leiden Manifesto", "url": "https://www.nature.com/articles/520429a", "note": "Ten principles for responsible use of research metrics."},
+        {"label": "OpenAlex works overview", "url": "https://docs.openalex.org/api-entities/works", "note": "Documentation for works and citation-related fields used as optional enrichment."}
+      ]
+    },
+    {
+      "slug": "reading-preprints-and-journal-versions",
+      "type": "guide",
+      "title": "How to read preprints and journal versions together",
+      "description": "Follow the history of a result without assuming that every version makes the same claims.",
+      "summary": "Use identifiers, version dates, methods, and correction history to understand what changed between an early manuscript and a later publication.",
+      "author": "Quantum Observatory",
+      "published_at": "2026-09-06",
+      "updated_at": "2026-09-06",
+      "status": "published",
+      "sections": [
+        {
+          "heading": "Start with identity, then compare content",
+          "paragraphs": [
+            "A preprint and a journal article can be versions of the same research, but a similar title is not proof. Begin with explicit evidence: a DOI on the arXiv record, an arXiv identifier in the journal metadata, a relationship supplied by a trusted index, or a statement on the authors’ pages. Author overlap supports the check but is not sufficient by itself.",
+            "Once identity is established, keep both links. The preprint page gives an early public date and version history; the DOI resolves to the registered publication. Neither record should silently overwrite the other because readers may need to cite, audit, or access different forms."
+          ]
+        },
+        {
+          "heading": "Read the version history before the abstract",
+          "paragraphs": [
+            "The date attached to a preprint version tells you which document a contemporary discussion could have seen. Later uploads can add data, repair an analysis, change authors, or align the manuscript with a journal decision. A current abstract can summarize the newest version even when an older claim circulated first.",
+            "Record the version number and date when a difference matters. For a major claim, compare the relevant section, figures, and stated limitations rather than relying on title changes. A revised manuscript is not automatically more reliable, but the revision record tells you where to look."
+          ]
+        },
+        {
+          "heading": "Peer review is meaningful but not a shortcut",
+          "paragraphs": [
+            "A journal publication normally indicates that the manuscript passed that venue’s editorial and peer-review process. It does not guarantee correctness, and review practices vary. Conversely, a preprint has not necessarily lacked all scrutiny: authors may have presented the work, shared it with peers, or submitted it, but those activities are not the same as a documented journal decision.",
+            "Describe the status precisely. Use preprint for the arXiv manuscript and journal article for the DOI-linked record. Avoid saying peer reviewed when the source does not establish it, and check for corrections, retractions, or expressions of concern on the publisher page."
+          ],
+          "bullets": [
+            "Confirm the DOI and arXiv identifier rather than matching on title alone.",
+            "Note which version you read and the date it became public.",
+            "Compare the methods and result sections when the conclusion matters.",
+            "Check the publisher page for corrections or retractions.",
+            "Cite the version that supports the statement you make."
+          ]
+        },
+        {
+          "heading": "Use the observatory without losing the source",
+          "paragraphs": [
+            "The observatory groups explicitly linked versions so they count as one research work. The detail view still lists the source records separately. Use that group as a map, then follow the original links for the full manuscript, license, supplementary information, and publication status.",
+            "If two likely versions are unlinked, do not assume the index has proved they are separate. It may mean that the upstream metadata lacks a relationship. A correction request with both source URLs can be reviewed, and a documented override can connect them without weakening the rule for every other record."
+          ]
+        }
+      ],
+      "sources": [
+        {"label": "arXiv submission and version help", "url": "https://info.arxiv.org/help/submit/index.html", "note": "Official arXiv guidance covering submissions and replacements."},
+        {"label": "Crossref relationships", "url": "https://www.crossref.org/documentation/schema-library/markup-guide-metadata-segments/relationships/", "note": "How registered scholarly objects can express relationships."},
+        {"label": "Crossmark overview", "url": "https://www.crossref.org/services/crossmark/", "note": "Crossref service for surfacing corrections, retractions, and other updates."}
+      ]
+    },
+    {
+      "slug": "interpreting-publication-counts",
+      "type": "guide",
+      "title": "How to interpret quantum publication counts",
+      "description": "A publication chart measures a defined corpus, not the health or importance of an entire field.",
+      "summary": "Separate works from records, publication dates from discovery dates, and measurement changes from changes in research activity.",
+      "author": "Quantum Observatory",
+      "published_at": "2026-09-06",
+      "updated_at": "2026-09-06",
+      "status": "published",
+      "sections": [
+        {
+          "heading": "Define the unit before reading the trend",
+          "paragraphs": [
+            "A chart can count submissions, source records, journal articles, presentations, or grouped research works. Those units answer different questions. Quantum Observatory’s primary weekly research series counts grouped works at their earliest known public appearance. Conference contributions and reports are shown separately because their publication processes and dates differ.",
+            "This definition avoids counting a revision and journal version as new research, but it depends on explicit links. When a reliable relationship is discovered later, an older week can be recalculated. The count is therefore a maintained estimate from a versioned corpus, not an immutable historical register."
+          ]
+        },
+        {
+          "heading": "Know what the corpus leaves out",
+          "paragraphs": [
+            "No single metadata source covers every relevant result. The observatory begins with configured sources and topic rules, which means it can miss a paper in another repository, a journal outside the configured set, work described only in a press release, or records whose language does not match the classifier. A source failure creates an additional temporary gap.",
+            "The methodology page reports those boundaries. A trend claim should name the included sources and the comparison period. Phrases such as all quantum research or the field grew are too broad unless the evidence supports that population."
+          ]
+        },
+        {
+          "heading": "Look for calendar and indexing effects",
+          "paragraphs": [
+            "Submission schedules, holidays, conference deadlines, and journal workflows can create short-term variation. Upstream services also ingest metadata in batches. A four-week baseline reduces some noise, but it does not turn a small weekly change into a causal result.",
+            "First-public dates and first-collected dates help separate two mechanisms. A cluster by publication date can reflect actual public releases; a cluster only by collection date more likely reflects discovery or indexing. Review individual records and source status before explaining either pattern."
+          ],
+          "bullets": [
+            "State whether the unit is a record, version, or grouped work.",
+            "Use complete periods with matching source coverage.",
+            "Inspect both publication and collection dates.",
+            "Report absolute counts beside percentages.",
+            "Avoid causal explanations without additional evidence."
+          ]
+        },
+        {
+          "heading": "Move from chart to evidence",
+          "paragraphs": [
+            "The most useful response to a change is to open the corresponding research list. Check whether the increase is distributed across many works, concentrated in one topic, or explained by multiple versions and late records. Then read a purposeful sample of original sources.",
+            "A publication count can guide attention and formulate a question. It cannot establish research quality, economic value, technical readiness, or consensus. Treat the chart as an index into evidence, and keep the definitions and missing coverage beside any exported conclusion."
+          ]
+        }
+      ],
+      "sources": [
+        {"label": "Crossref REST API tips", "url": "https://www.crossref.org/documentation/retrieve-metadata/rest-api/tips-and-tricks/", "note": "Official retrieval guidance, including cursor use and metadata caveats."},
+        {"label": "arXiv API user manual", "url": "https://info.arxiv.org/help/api/user-manual.html", "note": "Official query and result behavior for arXiv metadata."},
+        {"label": "Quantum Observatory methodology", "url": "https://qobservatory.com/methodology/", "note": "Definitions used by this site’s weekly counts."}
+      ]
+    },
+    {
+      "slug": "evaluating-quantum-advantage-claims",
+      "type": "guide",
+      "title": "How to evaluate a quantum advantage claim",
+      "description": "Ask what task was solved, what classical comparison was used, and whether the useful quantity was actually measured.",
+      "summary": "A quantum experiment can be technically important without establishing practical advantage for a real-world workload.",
+      "author": "Quantum Observatory",
+      "published_at": "2026-09-06",
+      "updated_at": "2026-09-06",
+      "status": "published",
+      "sections": [
+        {
+          "heading": "Identify the claim’s exact task",
+          "paragraphs": [
+            "Quantum advantage compares a quantum method with a relevant classical method for a defined computational task. The task may be random-circuit sampling, estimating an observable, optimization, simulation, or something else. Performance on one task does not transfer automatically to another, and a sampling demonstration need not produce a commercially useful answer.",
+            "Begin by writing down the input, required output, success criterion, and allowed error. If the paper’s conclusion changes when those details change, they belong in every summary of the result. Broad phrases such as faster than a supercomputer remove the conditions that make the comparison meaningful."
+          ]
+        },
+        {
+          "heading": "Interrogate the classical baseline",
+          "paragraphs": [
+            "A speedup is relative to a particular classical algorithm, implementation, hardware system, and resource estimate. After a quantum result appears, improved classical algorithms or better use of accelerators can narrow the gap. That does not erase the experiment; it changes the demonstrated comparison.",
+            "Check whether the baseline was executed or extrapolated, whether preprocessing and data movement were counted, and whether the classical method produced the same output quality. A fair comparison uses matching error tolerance and reports uncertainty in large extrapolations."
+          ]
+        },
+        {
+          "heading": "Trace verification and noise",
+          "paragraphs": [
+            "Large quantum outputs can be hard to verify directly. Experiments may validate smaller instances, use statistical tests, compare selected observables, or rely on theoretical arguments about the target distribution. Each approach supports a different strength of conclusion.",
+            "Noise mitigation, postselection, and calibration can be legitimate parts of an experiment, but they consume resources and can limit scaling. Ask which runs were discarded, how uncertainty was estimated, whether the result survives reasonable noise models, and how performance changes as the instance grows."
+          ],
+          "bullets": [
+            "Name the computational task and success threshold.",
+            "Match output accuracy across the quantum and classical methods.",
+            "Separate executed runtimes from extrapolated estimates.",
+            "Include sampling, calibration, error mitigation, and verification costs.",
+            "State whether the result demonstrates scientific, computational, or practical advantage."
+          ]
+        },
+        {
+          "heading": "Use a claim ladder",
+          "paragraphs": [
+            "A useful reading discipline is to place the result on a ladder. First, did the device perform the intended quantum circuit? Second, did it outperform the stated classical baseline for the defined task? Third, does the task answer a useful scientific or operational question? Fourth, do total time, cost, energy, reliability, and access support practical use?",
+            "A paper can make a strong contribution on an earlier rung without satisfying the later ones. Reporting the rung precisely is more informative than accepting or rejecting quantum advantage as a single label. Follow the original methods and subsequent classical work before repeating a headline-sized estimate."
+          ]
+        }
+      ],
+      "sources": [
+        {"label": "Quantum supremacy using a programmable superconducting processor", "url": "https://doi.org/10.1038/s41586-019-1666-5", "note": "Primary experimental paper defining a random-circuit sampling comparison."},
+        {"label": "Leveraging Secondary Storage to Simulate Deep 54-qubit Sycamore Circuits", "url": "https://doi.org/10.1145/3519939.3523439", "note": "Primary classical-computing work showing how the comparison can change with improved simulation."},
+        {"label": "Quantum computational advantage with a programmable photonic processor", "url": "https://doi.org/10.1038/s41586-020-03065-8", "note": "A primary paper using a different sampling platform and verification setting."}
+      ]
+    },
+    {
+      "slug": "comparing-error-correction-results",
+      "type": "guide",
+      "title": "How to compare quantum error-correction results",
+      "description": "Logical error rates only become comparable after code, noise, cycle, decoder, and resource assumptions are aligned.",
+      "summary": "Look beyond the headline logical error number and ask what operation, duration, hardware, and postselection produced it.",
+      "author": "Quantum Observatory",
+      "published_at": "2026-09-06",
+      "updated_at": "2026-09-06",
+      "status": "published",
+      "sections": [
+        {
+          "heading": "Define the logical event",
+          "paragraphs": [
+            "A logical error rate can refer to a memory experiment, a syndrome-extraction cycle, a logical gate, or an entire algorithmic fragment. Rates per round, per unit time, and per operation are not interchangeable. The experiment may report bit-flip and phase-flip channels separately or combine them through a model.",
+            "Write down the protected object, number of rounds, and success criterion before comparing values. A lower per-round memory error does not by itself establish a better logical gate, and a short experiment may not expose slow drift or leakage that appears over longer operation."
+          ]
+        },
+        {
+          "heading": "Check the scaling evidence",
+          "paragraphs": [
+            "Fault-tolerant proposals rely on a regime in which increasing code size suppresses logical error under stated assumptions. An experiment showing that a larger code performs better than a smaller one is therefore different from a single encoded qubit beating one selected physical component. Both can be informative, but they test different claims.",
+            "For a scaling result, inspect how many code distances or sizes were measured, whether hardware and noise conditions were comparable, and whether confidence intervals separate the trend. Threshold values depend on the code, decoder, operation set, and noise model; they are not universal device specifications."
+          ]
+        },
+        {
+          "heading": "Account for all resources",
+          "paragraphs": [
+            "Physical-qubit count is only the visible part of the overhead. Syndrome rounds take time, decoders use classical computation, routing and lattice surgery require space, and state preparation or distillation can dominate a useful workload. Postselection can improve a reported conditional result by discarding runs, but the acceptance probability then becomes part of the cost.",
+            "A fair comparison reports measurement fidelity, gate set, connectivity, cycle duration, decoder latency, leakage handling, and the treatment of lost or rejected shots. If one experiment uses real-time feedback and another decodes offline, that distinction matters for claims about operation."
+          ],
+          "bullets": [
+            "Match logical operation and error unit.",
+            "Compare code size, distance, and number of syndrome rounds.",
+            "Record decoder and whether decoding was real time.",
+            "Include rejected shots and state-preparation cost.",
+            "Separate demonstrated components from projected system overhead."
+          ]
+        },
+        {
+          "heading": "Read the result as a chain of conditions",
+          "paragraphs": [
+            "The most accurate summary often has a conditional form: for a stated code, device, circuit, decoder, and experiment duration, the measured logical quantity behaved in a particular way. This may sound less dramatic than a universal error-rate claim, but it tells another researcher what would need to be reproduced.",
+            "Use the paper’s supplementary information for decoder settings and exclusion rules, and look for raw or derived data where available. Compare results only across aligned columns; leave a blank rather than convert incomparable quantities into a single leaderboard."
+          ]
+        }
+      ],
+      "sources": [
+        {"label": "Surface codes: Towards practical large-scale quantum computation", "url": "https://doi.org/10.1103/PhysRevA.86.032324", "note": "Foundational surface-code review detailing thresholds and resource assumptions."},
+        {"label": "Suppressing quantum errors by scaling a surface code logical qubit", "url": "https://doi.org/10.1038/s41586-022-05434-1", "note": "Primary experimental scaling result and its stated conditions."},
+        {"label": "Quantum error correction below the surface code threshold", "url": "https://doi.org/10.1038/s41586-024-08449-y", "note": "Primary experiment comparing logical performance across code distances."}
+      ]
+    },
+    {
+      "slug": "reading-quantum-hardware-benchmarks",
+      "type": "guide",
+      "title": "How to read quantum hardware benchmarks",
+      "description": "Qubit count, component fidelity, circuit benchmarks, and application tests measure different parts of a processor.",
+      "summary": "Choose the benchmark that matches the workload, then check connectivity, compilation, sampling, and uncertainty before comparing devices.",
+      "author": "Quantum Observatory",
+      "published_at": "2026-09-06",
+      "updated_at": "2026-09-06",
+      "status": "published",
+      "sections": [
+        {
+          "heading": "There is no context-free best processor",
+          "paragraphs": [
+            "A processor with more physical qubits can perform worse on a circuit that needs high-fidelity entangling gates or dense connectivity. A smaller device can excel on one structured workload and still be unsuitable for another. Benchmark choice should follow the intended task rather than the metric with the largest headline number.",
+            "Start with workload width, depth, gate family, connectivity, mid-circuit measurement, and required output accuracy. These requirements determine which hardware characteristics constrain the run. Comparing devices without the workload is closer to comparing instruments by the number of controls than by the measurement they must make."
+          ]
+        },
+        {
+          "heading": "Component metrics need operating conditions",
+          "paragraphs": [
+            "Single- and two-qubit gate fidelities, readout error, coherence times, and leakage describe components under a calibration and test protocol. Average values can hide a weak edge in the connectivity graph, and the best reported value can describe only a selected pair. Performance can drift between calibration and user execution.",
+            "Check whether a value is mean, median, or selected best; whether uncertainty and date are reported; and whether gates were measured simultaneously. A circuit accumulates interacting errors, so multiplying isolated average fidelities is at best a rough model."
+          ]
+        },
+        {
+          "heading": "System benchmarks trade detail for comparability",
+          "paragraphs": [
+            "Randomized benchmarking estimates aspects of gate performance under its assumptions. Quantum Volume combines width and depth through random circuits and a pass criterion. Volumetric benchmarks generalize the view across rectangular circuit shapes. Application-oriented suites execute algorithms or kernels chosen to resemble useful workloads.",
+            "Each benchmark samples a region of behavior. A single scalar is easy to compare but can conceal why a system passed, how circuits were compiled, or which workloads remain difficult. A fuller result reports the circuit family, mapping rules, number of instances and shots, confidence, and any mitigation."
+          ],
+          "bullets": [
+            "Match benchmark circuit shape to the target workload.",
+            "Inspect native connectivity and compilation overhead.",
+            "Separate calibration data from end-to-end execution results.",
+            "Include queue, control, and repetition time only when the claim concerns throughput.",
+            "Do not combine vendor-defined scores as if they shared one protocol."
+          ]
+        },
+        {
+          "heading": "Build a comparison table with honest blanks",
+          "paragraphs": [
+            "Use one row per device and columns for the same protocol, software version, calibration window, circuit set, and success measure. Mark data unavailable when a provider does not publish a comparable value. Converting a missing measure from an unrelated benchmark creates precision without equivalence.",
+            "The best conclusion may be conditional: device A performed better for the tested circuit family under a particular compilation and date, while device B exposes capabilities the test did not measure. That statement is more useful for selecting an experiment than a universal rank."
+          ]
+        }
+      ],
+      "sources": [
+        {"label": "Validating quantum computers using randomized model circuits", "url": "https://doi.org/10.1038/s41567-021-01409-7", "note": "Primary paper describing a flexible volumetric benchmarking framework."},
+        {"label": "Quantum volume", "url": "https://doi.org/10.1103/PhysRevA.102.032420", "note": "Primary definition and analysis of the Quantum Volume benchmark."},
+        {"label": "Application-Oriented Performance Benchmarks for Quantum Computing", "url": "https://doi.org/10.1109/TQE.2022.3144238", "note": "Primary benchmark suite organized around application-motivated circuits."}
+      ]
+    },
+    {
+      "slug": "reproducing-an-observatory-comparison",
+      "type": "guide",
+      "title": "How to reproduce an Observatory comparison",
+      "description": "Save the data identity, filters, definitions, and coverage that produced a result.",
+      "summary": "A CSV is useful evidence only when another reader can tell which snapshot and transformation created it.",
+      "author": "Quantum Observatory",
+      "published_at": "2026-09-06",
+      "updated_at": "2026-09-06",
+      "status": "published",
+      "sections": [
+        {
+          "heading": "Record the question before the query",
+          "paragraphs": [
+            "A reproducible comparison begins with a sentence that defines the population and measure. For example: compare the number of grouped research works tagged error correction across two complete weeks in the configured corpus. This statement fixes the unit, tag, periods, and data boundary before the result is known.",
+            "Avoid beginning with a surprising percentage and then searching for a definition that supports it. If the question changes during exploration, save the new definition with the final output."
+          ]
+        },
+        {
+          "heading": "Capture the snapshot identity",
+          "paragraphs": [
+            "Every built snapshot exposes a run identifier and build identifier in its manifest. The run identifies the collection attempt; the build identifier also reflects the dataset, application, pipeline, and configuration used to render the site. Save both with the date of access.",
+            "The content hash identifies normalized records, while the code and collection-code revisions distinguish software used for collection and presentation. If a later export differs, these fields help determine whether new records, relationship corrections, rules, or interface code changed."
+          ]
+        },
+        {
+          "heading": "Export data and preserve the transformation",
+          "paragraphs": [
+            "Use the Research page to select the date basis, period, topic, material type, and source. Export the resulting CSV and store the visible filter values beside it. For a programmatic analysis, retain the summary, index, and relevant detail shards rather than assuming the live endpoints will remain unchanged forever.",
+            "Describe any additional grouping or exclusion in executable code or an unambiguous formula. If you manually inspect records, keep the source URLs and a reason for every exclusion. Do not replace missing dates with the collection date unless your question explicitly concerns discovery."
+          ],
+          "bullets": [
+            "Write the research question and unit of analysis.",
+            "Save run_id, build_id, content hash, and access date.",
+            "Record every interface filter or query parameter.",
+            "Retain source URLs and identifiers used to resolve duplicates.",
+            "Report unavailable coverage and undated exclusions."
+          ]
+        },
+        {
+          "heading": "Explain what can still change",
+          "paragraphs": [
+            "A reproduced output can be correct for its snapshot and still differ from a later site view. Late indexing can add an older work, a reliable DOI link can merge two records, and a classifier update can alter topic membership. These are versioned corrections rather than reasons to hide the difference.",
+            "Publish the absolute counts with the percentage, state that topics overlap, and link the methodology used. If the conclusion depends on only a few records, name and inspect them. A reader should be able to repeat the calculation and also see why the available corpus may not represent the entire field."
+          ]
+        }
+      ],
+      "sources": [
+        {"label": "Quantum Observatory source repository", "url": "https://github.com/seokjw0727/quantum-observatory", "note": "Versioned collection, grouping, aggregation, and validation code."},
+        {"label": "Quantum Observatory collection manifest", "url": "https://qobservatory.com/data/manifest.json", "note": "Current run, build, content, source, and software identity."},
+        {"label": "FAIR Guiding Principles", "url": "https://doi.org/10.1038/sdata.2016.18", "note": "Background principles for findable, accessible, interoperable, and reusable research objects."}
+      ]
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import { enhanceSelects } from "./selects.js";
-import { setupNavigation, revealPage, closeDetail } from "./motion.js";
+import "./common.js";
+import { revealPage, closeDetail } from "./motion.js";
 import {
   KINDS,
   PAPER_KINDS,
@@ -26,6 +27,7 @@ const page =
 let summary,
   records,
   sources,
+  editorial,
   filters,
   pageNumber = 1;
 const PAGE_SIZE = 20;
@@ -33,37 +35,6 @@ const number = new Intl.NumberFormat("en-US");
 const params = new URLSearchParams(location.search);
 const detailCache = new Map();
 let activeDetail = null;
-
-function setTheme(theme) {
-  document.documentElement.dataset.theme = theme;
-  document
-    .querySelector("#theme-toggle")
-    .setAttribute(
-      "aria-label",
-      theme === "dark" ? "Switch to light theme" : "Switch to dark theme",
-    );
-}
-try {
-  setTheme(
-    localStorage.getItem("qo-theme") ||
-      (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"),
-  );
-} catch {
-  setTheme("light");
-}
-document.querySelector("#theme-toggle").addEventListener("click", () => {
-  const theme =
-    document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-  setTheme(theme);
-  try {
-    localStorage.setItem("qo-theme", theme);
-  } catch {}
-});
-document
-  .querySelector(`[data-page="${page}"]`)
-  ?.setAttribute("aria-current", "page");
-
-setupNavigation();
 
 function selectedWeek() {
   return (
@@ -113,6 +84,17 @@ function freshness() {
 }
 function stat(label, value, note) {
   return `<div class="stat"><div class="stat-label">${label}</div><div class="stat-value">${number.format(value)}</div><div class="stat-note">${note}</div></div>`;
+}
+function sourceMessage(source) {
+  if (source.status === "success") return "Coverage available for this collection run.";
+  if (source.status === "failed") return "Unavailable during the latest collection; previously verified records were retained.";
+  if (source.status === "not_configured") return "Optional metadata enrichment is not configured.";
+  return source.note || "Automated collection is disabled.";
+}
+function editorialSpotlight() {
+  const featured = editorial?.articles?.[0];
+  if (!featured) return "";
+  return `<section class="editorial-feature"><span class="small-label">Featured ${esc(featured.type)}</span><h2><a href="${esc(featured.path)}">${esc(featured.title)}</a></h2><p>${esc(featured.summary)}</p><a class="text-link" href="${esc(featured.path)}">Read the full analysis →</a></section>`;
 }
 function chart() {
   const weeks = summary.weeks
@@ -292,7 +274,7 @@ function overview() {
               "",
             )}<span class="chart-note">vs. previous four weeks</span></div></div>`
         : ""
-    }${w.status === "in_progress" ? '<p class="notice quiet-notice">This week is still in progress. Counts are provisional; growth comparisons are withheld.</p>' : ""}${listShell()}`
+    }${w.status === "in_progress" ? '<p class="notice quiet-notice">This week is still in progress. Counts are provisional; growth comparisons are withheld.</p>' : ""}${editorialSpotlight()}${listShell()}`
   );
 }
 function archive() {
@@ -320,7 +302,7 @@ function methodology() {
       "Understand what is collected, how it is counted, and where coverage ends.",
     ) +
     freshness() +
-    `<div class="method-grid" style="margin-top:32px"><article class="prose"><h2>A defined view of research</h2><p>This observatory follows quantum computing and quantum information through selected public sources. Counts describe this collected corpus, not all research worldwide. There are currently ${number.format(summary.totals.records)} source records, grouped into ${number.format(summary.totals.research)} research works, plus ${number.format(summary.totals.talks)} conference contributions and ${number.format(summary.totals.reports)} reports.</p><h2>What counts as new?</h2><p>Research is assigned to the week of its earliest known public appearance. An arXiv revision does not become a new paper. A journal publication with an explicit DOI or arXiv link is grouped with its preprint. Similar titles alone are never enough to merge records.</p><p>Publication dates and collection dates are distinct. Use “First collected” in the Research view to find late-indexed or newly discovered materials. Date-only metadata retains the publisher’s calendar date; timestamps are converted to Korea Standard Time.</p><h2>Weekly periods and comparisons</h2><p>A week runs from Monday 00:00 to the next Monday 00:00 in Korea Standard Time. Collection is scheduled for Monday 09:17 KST. Historical activity is reconstructed from publication metadata. Comparisons require complete, matching research-source coverage. Current and incomplete weeks do not receive growth percentages.</p><p>Topic share is the number of research works carrying a tag divided by all research works that week. Rising topics compare that share with the previous four weeks and require at least five works in the selected week. Multi-topic percentages can total more than 100%.</p><h2>Conference contributions and reports</h2><p>QIP entries are accepted contributions from the official conference list, not independently verified recordings of delivered talks. The conference date range is retained; an individual presentation date is not invented. Conference editions are configured explicitly and must be updated for a new year.</p><p>Report publication dates are used only when explicitly available. A file’s upload directory is not treated as its publication date. ${number.format(summary.totals.undated)} records currently have no precise publication or event date and are available under “All collected dates.” DOE OSTI discovers technical reports through its official API. GAO monitoring covers a configured report page; the NQI adapter discovers report links from its publication index when accessible.</p><h2>Classification and source limits</h2><p>Eight transparent topic dictionaries match titles and available arXiv abstracts. These are rule-based tags, not an assessment of scientific quality. Untagged physics and journal results are excluded; official conference and report records remain discoverable even if unclassified.</p><p>Crossref currently covers PRX Quantum, Quantum, and npj Quantum Information. Citation metadata is supplementary and carries a retrieval date. Publisher abstracts and PDFs are not mirrored. arXiv abstracts are displayed with attribution and a source link.</p><h2>Updates and reproducibility</h2><p>Successful source checkpoints, record identifiers, classification rules, collection manifests, and content hashes are stored with the data. A 14-day overlap catches many indexing delays; early-month runs revisit at least 12 weeks. Longer delays can still be missed. Required-source failure blocks publication; optional-source failures are visible here.</p><p>Scheduled jobs can be delayed or disabled by the hosting service. The last successful collection remains visible, and the website marks an update overdue after eight days.</p><p><a href="/data/summary.json">Download statistics JSON</a> · <a href="/data/manifest.json">View collection manifest</a></p></article><aside><section class="panel"><div class="panel-heading"><div><h2>Source coverage</h2><p>Latest collection attempt</p></div></div><ul class="source-list">${sources.map((s) => `<li><div class="source-head"><a href="${esc(safeURL(s.url))}" target="_blank" rel="noopener noreferrer">${esc(s.name)} ↗</a><span class="source-status ${esc(s.status)}">${statusLabel(s.status)}</span></div><p>${esc(s.description || s.note || s.message || "")}</p><div class="source-stats">${s.last_success ? `Last success ${dateLabel(s.last_success, { year: "numeric" })}` : "No successful automated collection"}${s.included !== undefined ? ` · ${number.format(s.included)} included this run` : ""}</div></li>`).join("")}</ul></section><p class="chart-note" style="margin-top:16px">A failed source is missing coverage, not a zero-research result.</p></aside></div>`
+    `<div class="method-grid" style="margin-top:32px"><article class="prose"><h2>A defined view of research</h2><p>This observatory follows quantum computing and quantum information through selected public sources. Counts describe this collected corpus, not all research worldwide. There are currently ${number.format(summary.totals.records)} source records, grouped into ${number.format(summary.totals.research)} research works, plus ${number.format(summary.totals.talks)} conference contributions and ${number.format(summary.totals.reports)} reports.</p><h2>What counts as new?</h2><p>Research is assigned to the week of its earliest known public appearance. An arXiv revision does not become a new paper. A journal publication with an explicit DOI or arXiv link is grouped with its preprint. Similar titles alone are never enough to merge records.</p><p>Publication dates and collection dates are distinct. Use “First collected” in the Research view to find late-indexed or newly discovered materials. Date-only metadata retains the publisher’s calendar date; timestamps are converted to Korea Standard Time.</p><h2>Weekly periods and comparisons</h2><p>A week runs from Monday 00:00 to the next Monday 00:00 in Korea Standard Time. Collection is scheduled for Monday 09:17 KST. Historical activity is reconstructed from publication metadata. Comparisons require complete, matching research-source coverage. Current and incomplete weeks do not receive growth percentages.</p><p>Topic share is the number of research works carrying a tag divided by all research works that week. Rising topics compare that share with the previous four weeks and require at least five works in the selected week. Multi-topic percentages can total more than 100%.</p><h2>Conference contributions and reports</h2><p>QIP entries are accepted contributions from the official conference list, not independently verified recordings of delivered talks. The conference date range is retained; an individual presentation date is not invented. Conference editions are configured explicitly and must be updated for a new year.</p><p>Report publication dates are used only when explicitly available. A file’s upload directory is not treated as its publication date. ${number.format(summary.totals.undated)} records currently have no precise publication or event date and are available under “All collected dates.” DOE OSTI discovers technical reports through its official API. GAO records are included only after explicit configuration and review; the NQI browser-rendered library is not collected automatically.</p><h2>Classification and source limits</h2><p>Eight transparent topic dictionaries match titles and available arXiv abstracts. These are rule-based tags, not an assessment of scientific quality. Untagged physics and journal results are excluded; official conference and report records remain discoverable even if unclassified.</p><p>Crossref currently covers PRX Quantum, Quantum, and npj Quantum Information. Citation metadata is supplementary and carries a retrieval date. Publisher abstracts and PDFs are not mirrored. arXiv abstracts are displayed with attribution and a source link.</p><h2>Updates and reproducibility</h2><p>Successful source checkpoints, record identifiers, classification rules, collection manifests, and content hashes are stored with the data. A 14-day overlap catches many indexing delays; early-month runs revisit at least 12 weeks. Longer delays can still be missed. Required-source failure blocks publication; optional-source failures are visible here.</p><p>Scheduled jobs can be delayed or disabled by the hosting service. The last successful collection remains visible, and the website marks an update overdue after eight days.</p><p><a href="/data/summary.json">Download statistics JSON</a> · <a href="/data/manifest.json">View collection manifest</a></p></article><aside><section class="panel"><div class="panel-heading"><div><h2>Source coverage</h2><p>Latest collection attempt</p></div></div><ul class="source-list">${sources.map((s) => `<li><div class="source-head"><a href="${esc(safeURL(s.url))}" target="_blank" rel="noopener noreferrer">${esc(s.name)} ↗</a><span class="source-status ${esc(s.status)}">${statusLabel(s.status)}</span></div><p>${esc(sourceMessage(s))}</p><div class="source-stats">${s.last_success ? `Last success ${dateLabel(s.last_success, { year: "numeric" })}` : "No successful automated collection"}${s.included !== undefined ? ` · ${number.format(s.included)} included this run` : ""}</div></li>`).join("")}</ul></section><p class="chart-note" style="margin-top:16px">A failed source is missing coverage, not a zero-research result.</p></aside></div>`
   );
 }
 function renderPage() {
@@ -408,8 +390,8 @@ document.addEventListener("keydown", (e) => {
 });
 async function load() {
   try {
-    const [s, r, m] = await Promise.all(
-      ["/data/summary.json", "/data/index.json", "/data/manifest.json"].map(
+    const [s, r, m, e] = await Promise.all(
+      ["/data/summary.json", "/data/index.json", "/data/manifest.json", "/data/editorial.json"].map(
         async (url) => {
           const response = await fetch(url);
           if (!response.ok) throw Error("Snapshot unavailable");
@@ -420,7 +402,8 @@ async function load() {
     summary = s;
     records = r.records;
     sources = m.sources;
-    if (r.run_id !== s.run_id || m.run_id !== s.run_id || r.build_id !== s.build_id || m.build_id !== s.build_id)
+    editorial = e;
+    if (r.run_id !== s.run_id || m.run_id !== s.run_id || r.build_id !== s.build_id || m.build_id !== s.build_id || e.build_id !== s.build_id)
       throw Error("Snapshot versions do not match");
     filters = {
       week:
@@ -441,13 +424,11 @@ async function load() {
     renderPage();
   } catch {
     app.setAttribute("aria-busy", "false");
-    app.innerHTML =
-      pageHeading(
-        "Research is temporarily unavailable",
-        "The published snapshot could not be loaded.",
-      ) +
-      '<div class="notice"><p>Please reload the page. If the issue persists, the last deployment may need to be restored.</p><button class="button" id="retry" style="margin-top:16px">Try again</button></div>';
-    document.querySelector("#retry").onclick = load;
+    const notice = document.createElement("div");
+    notice.className = "notice data-notice";
+    notice.innerHTML = '<p>Interactive data could not be refreshed. The server-rendered snapshot and source links remain available.</p><button class="button" id="retry">Try again</button>';
+    app.prepend(notice);
+    document.querySelector("#retry").onclick = () => { notice.remove(); load(); };
   }
 }
 load();

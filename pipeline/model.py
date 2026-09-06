@@ -8,7 +8,7 @@ from urllib.parse import unquote, urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 KST = timezone(timedelta(hours=9))
-TOPICS = json.loads((ROOT / 'config/topics.json').read_text())
+TOPICS = json.loads((ROOT / 'config/topics.json').read_text(encoding='utf-8'))
 KINDS = {'preprint', 'journal_article', 'conference_paper', 'talk', 'report'}
 
 

@@ -25,6 +25,7 @@ jobs:
       - name: Validate JavaScript syntax
         run: |
           node --check web/assets/app.js
+          node --check web/assets/common.js
           node --check web/assets/core.js
       - name: Validate static build with isolated fixtures
         run: |
