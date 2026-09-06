@@ -1,3 +1,4 @@
+import { setupNavigation, revealPage, closeDetail } from "./motion.js";
 import {
   KINDS,
   PAPER_KINDS,
@@ -60,6 +61,8 @@ document.querySelector("#theme-toggle").addEventListener("click", () => {
 document
   .querySelector(`[data-page="${page}"]`)
   ?.setAttribute("aria-current", "page");
+
+setupNavigation();
 
 function selectedWeek() {
   return (
@@ -332,6 +335,7 @@ function renderPage() {
       `<div style="margin-top:30px">${listShell()}</div>`;
   else if (page === "archive") app.innerHTML = archive();
   else app.innerHTML = methodology();
+  revealPage(app);
   app.setAttribute("aria-busy", "false");
   document.title =
     {
@@ -353,7 +357,7 @@ async function openDetail(id) {
   activeDetail = id;
   document.querySelector("#detail-content").innerHTML =
     `<div class="detail-top"><span class="small-label">Research detail</span><button class="icon-button" id="close-detail" aria-label="Close research detail">×</button></div><div class="detail-inner"><h2 id="detail-title">${esc(index.title)}</h2><p role="status">Loading source metadata…</p></div>`;
-  document.querySelector("#close-detail").onclick = () => dialog.close();
+  document.querySelector("#close-detail").onclick = () => closeDetail(dialog);
   if (!dialog.open) dialog.showModal();
   try {
     if (!detailCache.has(index.detail_shard)) {
@@ -367,7 +371,7 @@ async function openDetail(id) {
     const linked = records.filter((x) => r.linked_record_ids.includes(x.id));
     document.querySelector("#detail-content").innerHTML =
       `<div class="detail-top"><span class="small-label">${KINDS[r.kind]}${r.presentation_status === "accepted" ? " · Accepted contribution" : ""}</span><button class="icon-button" id="close-detail" aria-label="Close research detail">×</button></div><div class="detail-inner"><span class="item-source">${esc(r.venue || sourceName(r.source))}</span><h2 id="detail-title">${esc(r.title)}</h2><p class="authors">${esc(r.authors.join(", ") || "Author metadata unavailable")}</p><div class="item-tags">${r.topics.map((t) => `<span class="tag">${esc(summary.topics[t]?.label || t)}</span>`).join("")}</div><dl class="detail-meta"><div><dt>${r.kind === "talk" ? "Conference dates" : "First public appearance"}</dt><dd>${r.kind === "talk" ? `${dateLabel(r.date, { year: "numeric" })} – ${dateLabel(r.event_end, { year: "numeric" })}` : dateLabel(effectiveDate(r), { year: "numeric" })}</dd></div><div><dt>Collected</dt><dd>${dateLabel(r.observed_at, { year: "numeric" })}</dd></div><div><dt>Identifier</dt><dd>${esc(r.doi || r.arxiv_id || sourceName(r.source))}</dd></div><div><dt>Source</dt><dd>${esc(sourceName(r.source))}${r.version ? ` · v${r.version}` : ""}</dd></div></dl><h3>${r.abstract ? "Abstract" : "Source material"}</h3><p class="abstract">${r.abstract ? esc(r.abstract) : "An abstract is not available in this snapshot. Follow the original source for the full material."}</p>${linked.length > 1 ? `<h3 style="margin-top:26px">Linked records</h3><ul class="linked-list">${linked.map((x) => `<li><a href="${esc(safeURL(x.url))}" target="_blank" rel="noopener noreferrer">${esc(KINDS[x.kind])} · ${esc(x.venue || sourceName(x.source))}</a></li>`).join("")}</ul>` : ""}<div class="detail-links"><a class="button primary" href="${esc(safeURL(r.url))}" target="_blank" rel="noopener noreferrer">Read original ↗</a>${r.arxiv_id ? `<a class="button" href="https://arxiv.org/pdf/${encodeURIComponent(r.arxiv_id)}" target="_blank" rel="noopener noreferrer">Open PDF ↗</a>` : ""}</div><p class="detail-footnote">Metadata from ${esc(sourceName(r.source))}. ${r.citations != null ? `${number.format(r.citations)} indexed citations as of ${dateLabel(r.citations_as_of, { year: "numeric" })}. ` : ""}Topic tags are assigned by transparent rules. ${r.presentation_status === "accepted" ? "Acceptance and the conference date range do not verify an individual talk was delivered." : ""}</p></div>`;
-    document.querySelector("#close-detail").onclick = () => dialog.close();
+    document.querySelector("#close-detail").onclick = () => closeDetail(dialog);
     document.querySelector("#close-detail").focus();
   } catch {
     if (activeDetail === id)
@@ -377,8 +381,13 @@ async function openDetail(id) {
 }
 dialog.addEventListener("click", (e) => {
   if (e.target === dialog && e.clientX < dialog.getBoundingClientRect().left)
-    dialog.close();
+    closeDetail(dialog);
 });
+dialog.addEventListener("cancel", (event) => {
+  event.preventDefault();
+  closeDetail(dialog);
+});
+
 dialog.addEventListener("close", () => {
   activeDetail = null;
 });
