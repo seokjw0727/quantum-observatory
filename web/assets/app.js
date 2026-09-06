@@ -17,6 +17,9 @@ import {
 
 const app = document.querySelector("#app");
 const dialog = document.querySelector("#detail-dialog");
+const buildId = document.body.dataset.buildId || "";
+const snapshotURL = (url) =>
+  `${url}${buildId ? `?v=${encodeURIComponent(buildId)}` : ""}`;
 const path = location.pathname.replace(/\/$/, "");
 const page =
   {
@@ -345,7 +348,7 @@ async function openDetail(id) {
   if (!dialog.open) dialog.showModal();
   try {
     if (!detailCache.has(index.detail_shard)) {
-      const res = await fetch(index.detail_shard);
+      const res = await fetch(snapshotURL(index.detail_shard));
       if (!res.ok) throw Error("Request failed");
       detailCache.set(index.detail_shard, await res.json());
     }
@@ -393,7 +396,7 @@ async function load() {
     const [s, r, m, e] = await Promise.all(
       ["/data/summary.json", "/data/index.json", "/data/manifest.json", "/data/editorial.json"].map(
         async (url) => {
-          const response = await fetch(url);
+          const response = await fetch(snapshotURL(url));
           if (!response.ok) throw Error("Snapshot unavailable");
           return response.json();
         },

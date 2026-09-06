@@ -10,6 +10,7 @@ from pipeline.model import make_record,merge_records,group_works,doi_id,arxiv_id
 from pipeline.adapters import parse_arxiv,parse_crossref,parse_qip,parse_gao,parse_nqi,parse_osti,collect_osti,collect_configured_report,enrich_openalex
 from pipeline.aggregate import aggregate
 from pipeline.collect import collect,save_records,read_records
+from pipeline.render import shell
 
 NOW='2026-09-07T00:17:00+00:00'
 
@@ -21,6 +22,13 @@ def paper(source='arxiv',sid='2609.00001',**kw):
 
 
 class DataIntegrity(unittest.TestCase):
+    def test_shell_versions_mutable_assets_with_build_id(self):
+        config=dict(canonical_origin='https://example.org',language='en',repository_url='https://example.org/source',_build_id='build-123')
+        page= shell(config,title='Test',description='Test page',body='<p>Ready</p>',active='',path='/',dynamic=True)
+        self.assertIn('/assets/style.css?v=build-123',page)
+        self.assertIn('/assets/app.js?v=build-123',page)
+        self.assertIn('data-build-id="build-123"',page)
+
     def test_cleaning_preserves_mathematical_inequalities(self):
         self.assertEqual(clean('$a < b$ and $c > d$'),'$a < b$ and $c > d$')
         self.assertEqual(clean('An <i>entangled</i> state'),'An entangled state')

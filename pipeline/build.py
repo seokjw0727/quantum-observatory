@@ -32,6 +32,9 @@ def build(data_dir,output):
                 fingerprint.update(str(file.relative_to(ROOT)).encode());fingerprint.update(file.read_bytes())
     build_id=fingerprint.hexdigest()[:24]
     result['build_id']=build_id
+    # Every generated page carries the build fingerprint into mutable asset and
+    # data URLs so a new deployment cannot be paired with a stale browser cache.
+    site_config=dict(site_config,_build_id=build_id)
     try:
         build_code_sha=os.environ.get('GITHUB_SHA') or subprocess.check_output(
             ['git','rev-parse','HEAD'],cwd=ROOT,text=True,stderr=subprocess.DEVNULL).strip()

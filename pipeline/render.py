@@ -69,10 +69,12 @@ def footer(config):
 def shell(config, *, title, description, body, active, path, dynamic=False, schema=None, robots="index,follow"):
     origin = config["canonical_origin"].rstrip("/")
     canonical = origin + path
+    build_id = str(config.get("_build_id", ""))
+    asset_suffix = f"?v={esc(build_id)}" if build_id else ""
     schema_tag = ""
     if schema:
         schema_tag = '<script type="application/ld+json">' + json.dumps(schema, ensure_ascii=False).replace("<", "\\u003c") + "</script>"
-    script = "/assets/app.js" if dynamic else "/assets/common.js"
+    script = ("/assets/app.js" if dynamic else "/assets/common.js") + asset_suffix
     return f'''<!doctype html>
 <html lang="{esc(config['language'])}">
   <head>
@@ -86,11 +88,11 @@ def shell(config, *, title, description, body, active, path, dynamic=False, sche
     <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
     <link rel="preload" href="/assets/fonts/dm-sans.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/assets/fonts/newsreader.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="stylesheet" href="/assets/style.css" />
+    <link rel="stylesheet" href="/assets/style.css{asset_suffix}" />
     {schema_tag}
     <script type="module" src="{script}"></script>
   </head>
-  <body data-nav="{esc(active)}">
+  <body data-nav="{esc(active)}" data-build-id="{esc(build_id)}">
     {header(active)}
     <main id="main" tabindex="-1">{body}</main>
     {footer(config)}
