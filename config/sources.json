@@ -39,11 +39,11 @@
     "id": "nqi",
     "name": "National Quantum Initiative",
     "kind": "report",
-    "adapter": "reports",
+    "adapter": "nqi",
     "url": "https://www.quantum.gov/publications-and-resources/publication-library/",
     "required": false,
-    "enabled": false,
-    "note": "The official library currently requires a browser-rendered index. Existing records are retained; automated collection is disabled until a stable public feed is available."
+    "enabled": true,
+    "note": "Collects the official publication library's embedded JSON and preserves the source date precision."
   },
   {
     "id": "gao",
@@ -80,6 +80,8 @@
     "url": "https://openalex.org/",
     "required": false,
     "enabled": true,
-    "max_enrichment": 100
+    "max_enrichment": 100,
+    "keyless_max_enrichment": 25,
+    "note": "Uses a bounded keyless budget when OPENALEX_API_KEY is unavailable."
   }
 ]

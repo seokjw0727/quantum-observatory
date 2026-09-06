@@ -223,6 +223,44 @@ def collect_reports(source,start,now,fetcher,initial=False):
     return parse_reports(fetcher.get(source['url']),source,now)
 
 
+class InlinePublicationData(HTMLParser):
+    """Extract the NQI library's documented inline JSON without rendering the page."""
+    def __init__(self,text):
+        super().__init__(convert_charrefs=True);self.active=False;self.parts=[];self.feed(text)
+    def handle_starttag(self,tag,attrs):
+        if tag=='script' and dict(attrs).get('id')=='inline-publications':self.active=True
+    def handle_endtag(self,tag):
+        if tag=='script' and self.active:self.active=False
+    def handle_data(self,data):
+        if self.active:self.parts.append(data)
+
+
+def parse_nqi(body,source,now):
+    parser=InlinePublicationData(body.decode('utf-8'))
+    if not parser.parts:raise ValueError('NQI publication data is missing from the official library')
+    items=json.loads(''.join(parser.parts))
+    if not isinstance(items,list):raise ValueError('Unexpected NQI publication data')
+    result=[]
+    for item in items:
+        title=clean(item.get('publicationtitle',''));url=safe_url(item.get('fileurl'))
+        if not title or not url:continue
+        raw=str(item.get('published') or item.get('year') or '').strip()
+        published=None;label=None;precision='unknown'
+        if re.fullmatch(r'\d{4}-\d{2}-\d{2}',raw):published=raw;label=raw;precision='day'
+        elif re.fullmatch(r'\d{4}-\d{2}',raw):label=raw;precision='month'
+        elif re.fullmatch(r'\d{4}',raw):label=raw;precision='year'
+        sid=str(item.get('publicationid') or url)
+        result.append(make_record(source['id'],sid,title,'report',url,now,
+            published_at=published,published_label=label,date_precision=precision,venue=source['name'],
+            provenance={'method':'nqi-inline-json-v1','index_url':source['url'],'retrieved_at':now}))
+    if len(result)<3:raise ValueError('NQI publication library returned too few usable records')
+    return result
+
+
+def collect_nqi(source,start,now,fetcher,initial=False):
+    return parse_nqi(fetcher.get(source['url']),source,now)
+
+
 def parse_gao(body,source,now):
     document=Document(body.decode('utf-8')).root
     headings=list(document.all('h1'))
@@ -284,19 +322,22 @@ def collect_osti(source,start,now,fetcher,initial=False):
 
 def enrich_openalex(records,source,now,fetcher):
     key=os.environ.get('OPENALEX_API_KEY')
-    if not key:return records,{'status':'not_configured','message':'API key has not been configured.','fetched':0}
-    eligible=[r for r in records if r.get('doi') and not r.get('enrichment')][:source.get('max_enrichment',100)]
+    limit=source.get('max_enrichment',100) if key else source.get('keyless_max_enrichment',25)
+    eligible=[r for r in records if r.get('doi') and not r.get('enrichment')][:limit]
     by_doi={}
-    for i in range(0,len(eligible),25):
-        batch=eligible[i:i+25]
-        params={'filter':'doi:'+'|'.join('https://doi.org/'+r['doi'] for r in batch),'per-page':25}
-        data=json.loads(fetcher.get('https://api.openalex.org/works',params,{'Authorization':'Bearer '+key}))
+    for i in range(0,len(eligible),100):
+        batch=eligible[i:i+100]
+        params={'filter':'doi:'+'|'.join('https://doi.org/'+r['doi'] for r in batch),'per_page':100,
+                'select':'id,doi,cited_by_count,authorships'}
+        headers={'Authorization':'Bearer '+key} if key else None
+        data=json.loads(fetcher.get('https://api.openalex.org/works',params,headers))
         for work in data['results']:
             by_doi[doi_id(work.get('doi'))]={'openalex_id':work['id'],'citations':work.get('cited_by_count'),
                 'as_of':now,'institutions':sorted({v['display_name'] for a in work.get('authorships',[]) for v in a.get('institutions',[])})}
     for r in records:
         if r.get('doi') in by_doi:r['enrichment']=by_doi[r['doi']]
-    return records,{'status':'success','message':'DOI metadata enrichment; bounded per-run budget.','fetched':len(by_doi),'last_success':now}
+    message='DOI metadata enrichment; bounded per-run budget.' if key else 'Keyless DOI metadata enrichment; limited per-run budget.'
+    return records,{'status':'success','message':message,'fetched':len(by_doi),'last_success':now}
 
 
-ADAPTERS={'arxiv':collect_arxiv,'crossref':collect_crossref,'qip':collect_qip,'reports':collect_reports,'gao':collect_gao,'configured_report':collect_configured_report,'osti':collect_osti}
+ADAPTERS={'arxiv':collect_arxiv,'crossref':collect_crossref,'qip':collect_qip,'reports':collect_reports,'nqi':collect_nqi,'gao':collect_gao,'configured_report':collect_configured_report,'osti':collect_osti}

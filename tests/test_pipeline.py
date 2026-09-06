@@ -7,7 +7,7 @@ from unittest.mock import patch
 from argparse import Namespace
 
 from pipeline.model import make_record,merge_records,group_works,doi_id,arxiv_id,day,week_start,validate,clean
-from pipeline.adapters import parse_arxiv,parse_crossref,parse_qip,parse_gao,parse_osti,collect_osti,collect_configured_report
+from pipeline.adapters import parse_arxiv,parse_crossref,parse_qip,parse_gao,parse_nqi,parse_osti,collect_osti,collect_configured_report,enrich_openalex
 from pipeline.aggregate import aggregate
 from pipeline.collect import collect,save_records,read_records
 
@@ -106,6 +106,30 @@ class DataIntegrity(unittest.TestCase):
                     reviewed_at='2026-09-06',authors=['U.S. Government Accountability Office'])
         row=collect_configured_report(source,date(2026,1,1),NOW,Fetcher())[0]
         self.assertEqual(row['published_at'],'2026-03-18');self.assertEqual(row['provenance']['method'],'reviewed-config-v1')
+
+    def test_nqi_reads_inline_json_and_preserves_date_precision(self):
+        items=[
+            dict(publicationid='1',publicationtitle='Quantum Networking Report',published='2026-08-14',fileurl='https://www.quantum.gov/report-one.pdf'),
+            dict(publicationid='2',publicationtitle='National Quantum Strategy',published='2025',fileurl='https://www.quantum.gov/report-two.pdf'),
+            dict(publicationid='3',publicationtitle='Quantum Workforce Plan',published='2024-03',fileurl='https://www.quantum.gov/report-three.pdf')]
+        body=('<script id="inline-publications" type="application/json">'+json.dumps(items)+'</script>').encode()
+        source=dict(id='nqi',name='National Quantum Initiative',url='https://www.quantum.gov/publication-library/')
+        rows=parse_nqi(body,source,NOW)
+        self.assertEqual(rows[0]['published_at'],'2026-08-14');self.assertEqual(rows[0]['date_precision'],'day')
+        self.assertIsNone(rows[1]['published_at']);self.assertEqual(rows[1]['published_label'],'2025')
+        self.assertIsNone(rows[2]['published_at']);self.assertEqual(rows[2]['date_precision'],'month')
+
+    def test_openalex_uses_bounded_keyless_fallback(self):
+        class Fetcher:
+            params=None;headers='unset'
+            def get(self,url,params,headers):
+                self.params=params;self.headers=headers
+                return json.dumps({'results':[{'id':'https://openalex.org/W1','doi':'https://doi.org/10.1103/test','cited_by_count':4,'authorships':[]} ]})
+        rows=[paper(doi='10.1103/test')];fetcher=Fetcher()
+        with patch.dict('os.environ',{},clear=True):
+            rows,status=enrich_openalex(rows,dict(keyless_max_enrichment=25,max_enrichment=100),NOW,fetcher)
+        self.assertEqual(status['status'],'success');self.assertIsNone(fetcher.headers)
+        self.assertEqual(fetcher.params['per_page'],100);self.assertEqual(rows[0]['enrichment']['citations'],4)
 
     def test_required_source_failure_preserves_snapshot(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -54,7 +54,7 @@ def header(active):
     return f'''<a class="skip" href="#main">Skip to content</a>
     <header class="site-header"><div class="header-inner">
       <a class="brand" href="/" aria-label="Quantum Observatory home"><span class="brand-mark" aria-hidden="true">q.</span><span>Quantum <strong>Observatory</strong></span></a>
-      <button id="theme-toggle" class="icon-button" aria-label="Toggle color theme" title="Toggle color theme">◐</button>
+      <button id="theme-toggle" class="icon-button" aria-label="Toggle color theme" title="Toggle color theme"><span class="theme-icon" aria-hidden="true"></span></button>
       <button id="menu-toggle" class="menu-toggle" aria-controls="main-nav" aria-expanded="false" aria-label="Open navigation"><span class="menu-label">Menu</span><span class="menu-lines" aria-hidden="true"><span></span><span></span></span></button>
       <nav id="main-nav" aria-label="Main navigation" tabindex="-1"><div class="nav-links">{nav}</div></nav>
     </div></header>'''
@@ -101,7 +101,7 @@ def shell(config, *, title, description, body, active, path, dynamic=False, sche
 
 
 def page_heading(title, description, eyebrow="QUANTUM COMPUTING & INFORMATION"):
-    return f'<div class="page-heading static-heading"><div><span class="eyebrow">{esc(eyebrow)}</span><h1>{esc(title)}</h1><p>{esc(description)}</p></div></div>'
+    return f'<div class="page-heading static-heading"><div><h1>{esc(title)}</h1><p>{esc(description)}</p></div></div>'
 
 
 def article_path(article):

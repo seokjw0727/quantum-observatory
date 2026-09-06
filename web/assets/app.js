@@ -74,7 +74,7 @@ function weekOptions(includeAll = false) {
   );
 }
 function pageHeading(title, description, withWeek = false) {
-  return `<div class="page-heading"><div><span class="eyebrow">QUANTUM COMPUTING & INFORMATION</span><h1>${title}</h1><p>${description}</p></div>${withWeek ? `<div class="date-control"><label for="week-select">Reporting period · Korea Standard Time</label><select id="week-select" class="select">${weekOptions(page === "research")}</select></div>` : ""}</div>`;
+  return `<div class="page-heading"><div><h1>${title}</h1><p>${description}</p></div>${withWeek ? `<div class="date-control"><label for="week-select">Reporting period · Korea Standard Time</label><select id="week-select" class="select">${weekOptions(page === "research")}</select></div>` : ""}</div>`;
 }
 function freshness() {
   const age = (Date.now() - Date.parse(summary.generated_at)) / 86400000;
@@ -112,7 +112,7 @@ function topicsPanel() {
   return `<section class="panel"><div class="panel-heading"><div><h2>Across the field</h2><p>Research by topic · selected week</p></div></div><div class="topic-bars">${topics.map(([id, count]) => `<div class="topic-row"><a class="topic-name text-link" href="/research/?week=${w.id}&topic=${id}" title="${esc(summary.topics[id].label)}">${esc(topicName(id))}</a><div class="topic-track" aria-hidden="true"><div class="topic-fill" style="width:${(count / max) * 100}%;background:${summary.topics[id].color}"></div></div><span class="topic-value">${number.format(count)}</span></div>`).join("")}</div><p class="chart-note">Topics overlap. A research work can belong to more than one field.</p></section>`;
 }
 function researchToolbar() {
-  return `<div class="toolbar"><div class="search-wrap"><span class="search-icon" aria-hidden="true">⌕</span><label class="sr-only" for="search">Search titles, authors, DOI, or arXiv ID</label><input type="search" id="search" placeholder="Search titles, authors, or identifiers…" value="${esc(filters.query)}" autocomplete="off"></div><label class="sr-only" for="topic-filter">Topic</label><select id="topic-filter" class="select"><option value="">All topics</option>${Object.entries(
+  return `<div class="toolbar"><div class="search-wrap"><span class="search-icon" aria-hidden="true"></span><label class="sr-only" for="search">Search titles, authors, DOI, or arXiv ID</label><input type="search" id="search" placeholder="Search titles, authors, or identifiers…" value="${esc(filters.query)}" autocomplete="off"></div><label class="sr-only" for="topic-filter">Topic</label><select id="topic-filter" class="select"><option value="">All topics</option>${Object.entries(
     summary.topics,
   )
     .map(
