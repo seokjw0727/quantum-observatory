@@ -48,12 +48,12 @@ Open `http://localhost:8080`. Browser search covers titles, authors, DOI, and ar
 | `tests/` | Data-integrity and frontend-logic tests |
 | `.github/workflows/` | Validation and weekly publication |
 
-The local `data/` directory is ignored on `main`. The `data` branch stores `records/*.jsonl`, `state.json`, and run manifests. Do not use Actions cache as the authoritative dataset. A supplied project archive may include a real local snapshot so the site can be rebuilt immediately.
+The local `data/` directory is ignored on `master`. The `data` branch stores `records/*.jsonl`, `state.json`, and run manifests. Do not use Actions cache as the authoritative dataset. A supplied project archive may include a real local snapshot so the site can be rebuilt immediately.
 
 ## GitHub setup
 
-1. Create a repository (suggested name: `quantum-observatory`) and push this project's `main` branch.
-2. Keep `main` as the default branch. Allow the collection workflow's `GITHUB_TOKEN` to write repository contents. Branch rules must allow this workflow to update `data`; it never force-pushes or modifies `main`.
+1. Create a repository (suggested name: `quantum-observatory`) and push this project's `master` branch.
+2. Keep `master` as the default branch. Allow the collection workflow's `GITHUB_TOKEN` to write repository contents. Branch rules must allow this workflow to update `data`; it never force-pushes or modifies `master`.
 3. In repository **Settings → Secrets and variables → Actions**, configure the values below.
 4. Run **Collect and publish** manually once. With no previous data branch it backfills 12 weeks. The code-validation workflow uses isolated synthetic fixtures and never deploys them.
 
@@ -70,12 +70,12 @@ Never commit tokens or put them in the browser bundle. Enter secrets directly in
 
 ## Cloudflare Pages setup
 
-Create a **Pages Direct Upload** project named `quantum-observatory` (or your chosen name), with production branch `main`. Do not enable a second automatic Git build for this project. The GitHub workflow builds `dist/` and uploads that exact artifact using Wrangler.
+Create a **Pages Direct Upload** project named `quantum-observatory` (or your chosen name), with production branch `master`. Do not enable a second automatic Git build for this project. The GitHub workflow builds `dist/` and uploads that exact artifact using Wrangler.
 
 Example initial project creation from an authenticated workstation:
 
 ```bash
-npx wrangler pages project create quantum-observatory --production-branch=main
+npx wrangler pages project create quantum-observatory --production-branch=master
 ```
 
 Set `SITE_URL` to the returned HTTPS Pages URL, or a custom domain attached to the project. The deploy job verifies that `/data/manifest.json` serves the exact expected `build_id`, which fingerprints the dataset, application, pipeline, and configuration. This also distinguishes code-only rebuilds of the same collection run. The workflow does not consider upload completion alone to be proof that the correct version is being served.
@@ -93,7 +93,7 @@ No deployed URL is implied by the source bundle. Account configuration and a suc
 - Production data is persisted only after a valid build. An upload failure can be retried without collecting again.
 - GitHub scheduled events may be delayed, dropped, or disabled after long inactivity in public repositories. Manual dispatch remains available. The UI marks snapshots older than eight days as overdue.
 
-To rebuild/deploy code changes without recollecting: manually run **Collect and publish**, set `collect` to false, and leave `deploy` true. A push to `main` that changes the application, pipeline, configuration, deployment scripts, or publication workflow triggers collection and a validated rebuild. Deployment runs when the Cloudflare variables and secret are configured. Documentation-only and test-only pushes run code validation without publishing.
+To rebuild/deploy code changes without recollecting: manually run **Collect and publish**, set `collect` to false, and leave `deploy` true. A push to `master` that changes the application, pipeline, configuration, deployment scripts, or publication workflow triggers collection and a validated rebuild. Deployment runs when the Cloudflare variables and secret are configured. Documentation-only and test-only pushes run code validation without publishing.
 
 ## Counting and scientific limitations
 

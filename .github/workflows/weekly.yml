@@ -1,7 +1,7 @@
 name: Collect and publish
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths:
       - "web/**"
       - "pipeline/**"
@@ -113,7 +113,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=${{ vars.PAGES_PROJECT_NAME }} --branch=main
+          command: pages deploy dist --project-name=${{ vars.PAGES_PROJECT_NAME }} --branch=master
       - name: Verify the deployed data version
         env:
           SITE_URL: ${{ vars.SITE_URL }}
