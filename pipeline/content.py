@@ -11,6 +11,8 @@ from .model import ROOT, day
 ARTICLE_TYPES = {"analysis", "guide"}
 ARTICLE_STATUSES = {"published"}
 SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+PUBLISHER_ID = re.compile(r"^pub-\d{16}$")
+ADS_TXT = re.compile(r"^google\.com, (pub-\d{16}), DIRECT, f08c47fec0942fa0$")
 
 
 def load_site_config():
@@ -20,8 +22,12 @@ def load_site_config():
         raise ValueError("canonical_origin must be an HTTPS origin without a path")
     if config.get("ads", {}).get("mode") not in {"off", "verification", "live"}:
         raise ValueError("ads.mode must be off, verification, or live")
-    if config["ads"]["mode"] != "off" and not config["ads"].get("publisher_id"):
-        raise ValueError("An actual publisher_id is required before advertising is enabled")
+    ads = config["ads"]
+    if ads["mode"] != "off":
+        publisher_id = ads.get("publisher_id", "")
+        record = ADS_TXT.fullmatch(ads.get("ads_txt", ""))
+        if not PUBLISHER_ID.fullmatch(publisher_id) or not record or record.group(1) != publisher_id:
+            raise ValueError("Advertising verification requires a matching publisher_id and ads.txt record")
     for key in ["publisher_name", "repository_url", "contact_url"]:
         if not config.get(key):
             raise ValueError(f"Missing site setting: {key}")

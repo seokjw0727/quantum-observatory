@@ -11,10 +11,11 @@ class EditorialContent(unittest.TestCase):
         self.assertEqual(sum(a['type']=='guide' for a in articles),6)
         self.assertTrue(all(a['status']=='published' for a in articles))
 
-    def test_advertising_stays_off_without_real_publisher_id(self):
+    def test_advertising_verification_uses_reviewed_publisher_record(self):
         site=load_site_config()
-        self.assertEqual(site['ads']['mode'],'off')
-        self.assertIsNone(site['ads']['publisher_id'])
+        self.assertEqual(site['ads']['mode'],'verification')
+        self.assertEqual(site['ads']['publisher_id'],'pub-8724183999332964')
+        self.assertEqual(site['ads']['ads_txt'],'google.com, pub-8724183999332964, DIRECT, f08c47fec0942fa0')
         self.assertEqual(site['canonical_origin'],'https://qobservatory.com')
 
 

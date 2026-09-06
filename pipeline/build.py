@@ -82,6 +82,8 @@ def build(data_dir,output):
     sitemap='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+''.join(f'<url><loc>{xml_escape(site_config["canonical_origin"].rstrip("/")+path)}</loc><lastmod>{lastmod}</lastmod></url>\n' for path in public_paths)+'</urlset>\n'
     (stage/'sitemap.xml').write_text(sitemap,encoding='utf-8')
     (stage/'robots.txt').write_text(f'User-agent: *\nAllow: /\n\nSitemap: {site_config["canonical_origin"].rstrip("/")}/sitemap.xml\n',encoding='utf-8')
+    if site_config['ads']['mode'] != 'off':
+        (stage/'ads.txt').write_text(site_config['ads']['ads_txt']+'\n',encoding='utf-8')
     if output.exists():shutil.rmtree(output)
     stage.replace(output)
     print(f'Built {len(index)} records, {len(shards)} detail shards, {len(public_paths)} public routes → {output}')

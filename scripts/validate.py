@@ -57,10 +57,13 @@ def validate(directory,production=False):
         assert canonical.group(1) in sitemap,f'Canonical missing from sitemap: {relative}'
     robots=(root/'robots.txt').read_text(encoding='utf-8')
     assert 'User-agent: *' in robots and site['canonical_origin']+'/sitemap.xml' in robots,'Invalid robots.txt'
+    ad_code_absent=all('adsbygoogle' not in path.read_text(encoding='utf-8',errors='ignore') for path in root.rglob('*') if path.is_file())
     if site['ads']['mode']=='off':
         assert not (root/'ads.txt').exists(),'ads.txt must not contain an invented publisher ID'
-        assert all('adsbygoogle' not in path.read_text(encoding='utf-8',errors='ignore') for path in root.rglob('*') if path.is_file()),'Advertising code present while ads are off'
-    elif site['ads']['mode']=='live':assert (root/'ads.txt').is_file(),'Live advertising requires ads.txt'
+        assert ad_code_absent,'Advertising code present while ads are off'
+    else:
+        assert (root/'ads.txt').read_text(encoding='utf-8').strip()==site['ads']['ads_txt'],'ads.txt does not match the reviewed publisher record'
+        if site['ads']['mode']=='verification':assert ad_code_absent,'Ad code must stay off during publisher verification'
     files=[p for p in root.rglob('*') if p.is_file()]
     assert len(files)<20000,'Split or migrate data before the Pages asset limit'
     assert max(p.stat().st_size for p in files)<25*1024*1024,'Oversized Pages asset'

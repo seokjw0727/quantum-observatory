@@ -14,7 +14,7 @@ An English-language research observatory for quantum computing and quantum infor
 - Title/author/identifier search, material/topic/source/date filters, grouped versions, pagination, CSV export, and on-demand abstract details.
 - Light/dark themes, responsive layouts, keyboard navigation, native detail dialogs, and chart data tables.
 - Crawlable route-specific HTML, ten original analysis and guide articles, and transparent editorial, privacy, and correction policies.
-- Advertising remains disabled until a real publisher ID, consent configuration, and reviewed placement are supplied.
+- Publisher verification uses a reviewed `ads.txt` record. Advertising delivery remains disabled until consent configuration and placements are reviewed.
 - GitHub Actions for validation, weekly collection, durable data-branch updates, and Cloudflare Pages Direct Upload.
 
 ## Implementation
