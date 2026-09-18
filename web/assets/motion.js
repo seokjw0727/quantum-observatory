@@ -53,7 +53,7 @@ export function revealPage(root) {
       observer.unobserve(entry.target);
     }
   }, { threshold: 0.06 });
-  root.querySelectorAll(".page-heading, .stats, .analytics > .panel, .archive-card, .method-grid > *, .research-panel").forEach((element, index) => {
+  root.querySelectorAll(".page-heading, .stats, .analytics > .panel, .archive-card, .method-grid > *").forEach((element, index) => {
     element.style.setProperty("--reveal-delay", `${Math.min(index % 4, 3) * 45}ms`);
     element.classList.add("reveal-pending");
     observer.observe(element);
