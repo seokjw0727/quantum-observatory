@@ -11,6 +11,7 @@ from pipeline.adapters import parse_arxiv,parse_crossref,parse_qip,parse_gao,par
 from pipeline.aggregate import aggregate
 from pipeline.collect import collect,save_records,read_records
 from pipeline.render import shell
+from pipeline.build import version_module_imports
 
 NOW='2026-09-07T00:17:00+00:00'
 
@@ -28,6 +29,13 @@ class DataIntegrity(unittest.TestCase):
         self.assertIn('/assets/style.css?v=build-123',page)
         self.assertIn('/assets/app.js?v=build-123',page)
         self.assertIn('data-build-id="build-123"',page)
+
+    def test_module_dependencies_receive_the_entry_point_build_version(self):
+        code='import {SORTS} from "./core.js"; import "./common.js"; export {x} from "../other.js"; const m=import("./motion.js"); import x from "https://example.org/library.js";'
+        actual=version_module_imports(code,'next-build')
+        for dependency in ['./core.js','./common.js','../other.js','./motion.js']:
+            self.assertIn(dependency+'?v=next-build',actual)
+        self.assertIn('"https://example.org/library.js"',actual)
 
     def test_cleaning_preserves_mathematical_inequalities(self):
         self.assertEqual(clean('$a < b$ and $c > d$'),'$a < b$ and $c > d$')

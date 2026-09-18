@@ -33,6 +33,11 @@ def validate(directory,production=False):
     summary=json.loads((root/'data/summary.json').read_text(encoding='utf-8'));index=json.loads((root/'data/index.json').read_text(encoding='utf-8'));manifest=json.loads((root/'data/manifest.json').read_text(encoding='utf-8'))
     assert summary['run_id']==index['run_id']==manifest['run_id'],'Mixed data snapshots'
     assert summary['build_id']==index['build_id']==manifest['build_id'],'Mixed application builds'
+    for asset in (root/'assets').glob('*.js'):
+        code=asset.read_text(encoding='utf-8')
+        for dependency in re.findall(r'''\b(?:from\s*|import\s*(?:\(\s*)?)['"](\.{1,2}/[^'"]+\.js(?:\?[^'"]*)?)['"]''',code):
+            assert dependency.endswith('?v='+manifest['build_id']),f'Unversioned module dependency: {asset.name}: {dependency}'
+            assert (asset.parent/urlsplit(dependency).path).is_file(),f'Missing module dependency: {dependency}'
     if production:assert manifest['snapshot_type']=='live','Fixture data must never be deployed'
     editorial=json.loads((root/'data/editorial.json').read_text(encoding='utf-8'))
     assert editorial['build_id']==manifest['build_id'],'Editorial index differs from application build'

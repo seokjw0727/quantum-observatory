@@ -2,6 +2,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -12,6 +13,14 @@ from .collect import read_records
 from .content import load_articles, load_site_config
 from .model import ROOT, atomic_json, merge_records
 from .render import article_path, page_heading, render_article, render_dynamic, render_listing, render_policy_page, render_error_correction_topic, shell, write_page
+
+
+MODULE_IMPORT = re.compile(r'''(?P<prefix>\b(?:from\s*|import\s*(?:\(\s*)?))(?P<quote>['"])(?P<path>\.{1,2}/[^'"]+\.js)(?P=quote)''')
+
+
+def version_module_imports(code,build_id):
+    # Entry-point queries do not propagate to relative ES-module dependencies.
+    return MODULE_IMPORT.sub(lambda m:m['prefix']+m['quote']+m['path']+'?v='+build_id+m['quote'],code)
 
 
 def build(data_dir,output):
@@ -44,6 +53,8 @@ def build(data_dir,output):
     stage=output.with_name(output.name+'-staging')
     if stage.exists():shutil.rmtree(stage)
     shutil.copytree(ROOT/'web',stage)
+    for asset in (stage/'assets').glob('*.js'):
+        asset.write_text(version_module_imports(asset.read_text(encoding='utf-8'),build_id),encoding='utf-8')
     full=result.pop('records');index=[];shards={}
     for r in full:
         shard=f'{r["source"]}-{r["id"].split(":")[-1][0]}.json'
