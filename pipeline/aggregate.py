@@ -2,6 +2,22 @@ from datetime import timedelta
 from .model import TOPICS, day, group_works, week_start
 
 
+def citation_snapshot(records):
+    """One attributable measurement per work; never sum publication versions."""
+    measurements=[]
+    for r in records:
+        enrichment=r.get('enrichment') or {}
+        for count,provider,stamp in [
+            (enrichment.get('citations'),'OpenAlex',enrichment.get('as_of')),
+            (r.get('citations'),r.get('citations_source') or 'Crossref',r.get('citations_as_of')),
+        ]:
+            if isinstance(count,int) and not isinstance(count,bool) and count>=0 and stamp:
+                measurements.append((provider=='OpenAlex',stamp,r['id'],count,provider))
+    if not measurements:return dict(citations=None,citations_source=None,citations_as_of=None)
+    _,stamp,_,count,provider=max(measurements)
+    return dict(citations=count,citations_source=provider,citations_as_of=stamp)
+
+
 def record_date(r):
     if r.get('event_start'):return r['event_start']
     return r.get('published_at') if r.get('date_precision')=='day' else None
@@ -42,6 +58,12 @@ def aggregate(records,state,overrides=None):
                 if pp>0:w['rising'].append({'topic':topic,'count':n,'change_pp':round(pp,2)})
             w['rising'].sort(key=lambda r:r['change_pp'],reverse=True)
     work_map={rid:w for w in works for rid in w['record_ids']}
+    by_id={r['id']:r for r in records}
+    work_metadata={}
+    for w in works:
+        papers=[by_id[rid] for rid in w['record_ids'] if by_id[rid]['kind'] in {'preprint','journal_article','conference_paper'}]
+        years=[int(value[:4]) for r in papers for value in [r.get('published_at') or r.get('published_label')] if value and value[:4].isdigit()]
+        work_metadata[w['id']]=dict(citation_snapshot(papers),publication_year=min(years) if years else None)
     indexed=[]
     for r in records:
         w=work_map[r['id']]
@@ -50,8 +72,7 @@ def aggregate(records,state,overrides=None):
             event_end=r.get('event_end'),url=r['url'],venue=r.get('venue'),doi=r.get('doi'),arxiv_id=r.get('arxiv_id'),
             first_published=w['first_published'],observed_at=r['observed_at'],
             abstract=r.get('abstract'),presentation_status=r.get('presentation_status'),
-            citations=(r.get('enrichment') or {}).get('citations',r.get('citations')),
-            citations_as_of=(r.get('enrichment') or {}).get('as_of',r.get('citations_as_of')),
+            **(work_metadata[w['id']] if r['kind'] in {'preprint','journal_article','conference_paper'} else dict(citations=None,citations_source=None,citations_as_of=None,publication_year=int(record_date(r)[:4]) if record_date(r) else None)),
             linked_record_ids=w['record_ids'],version=r.get('version'),events=r.get('events',[]),
             provenance=r.get('provenance',{})))
     indexed.sort(key=lambda r:(r['date'] or '',r['id']),reverse=True)

@@ -13,6 +13,10 @@ import {
   weekLabel,
   toCSV,
   chartPoints,
+  SORTS,
+  normalizeSort,
+  publicationYear,
+  citationCount,
 } from "./core.js";
 
 const app = document.querySelector("#app");
@@ -35,7 +39,6 @@ let summary,
   pageNumber = 1;
 const PAGE_SIZE = 20;
 const number = new Intl.NumberFormat("en-US");
-const params = new URLSearchParams(location.search);
 const detailCache = new Map();
 let activeDetail = null;
 
@@ -97,7 +100,21 @@ function sourceMessage(source) {
 function editorialSpotlight() {
   const featured = editorial?.articles?.[0];
   if (!featured) return "";
-  return `<section class="editorial-feature"><span class="small-label">Featured ${esc(featured.type)}</span><h2><a href="${esc(featured.path)}">${esc(featured.title)}</a></h2><p>${esc(featured.summary)}</p><a class="text-link" href="${esc(featured.path)}">Read the full analysis →</a></section>`;
+  return `<section class="editorial-feature"><h2><a href="${esc(featured.path)}">${esc(featured.title)}</a></h2><p>${esc(featured.summary)}</p><a class="text-link" href="${esc(featured.path)}">Read the full analysis →</a></section>`;
+}
+function readingPaths() {
+  const articles = editorial?.articles || [];
+  const related = filters.topic ? articles.filter((a) => a.topics?.includes(filters.topic)) : articles;
+  return `<section class="reading-paths" aria-labelledby="reading-paths-title"><h2 id="reading-paths-title">Read beyond the abstract</h2><p>Our research notes separate reported results from interpretation, and explain what to check before comparing claims.</p><ul>${(related.length ? related : articles).slice(0, 3).map((a) => `<li><a href="${esc(a.path)}">${esc(a.title)}</a><p>${esc(a.summary)}</p></li>`).join("")}</ul></section>`;
+}
+function libraryIntroduction() {
+  return `<div class="library-introduction"><p>Start with a topic and a publication year. Newest first follows the earliest known public year of a linked work, rather than the date it was added here. Citations help trace established literature; they do not measure research quality.</p><p><a href="/guides/sorting-papers-without-ranking-quality/">How to use years and citation counts</a> · <a href="/analysis/">Read our research analysis</a> · <a href="/topics/error-correction/">Error-correction reading path</a></p></div>`;
+}
+function citationLabel(r) {
+  if (!PAPER_KINDS.has(r.kind)) return "";
+  const count = citationCount(r);
+  if (count === null) return '<span class="citation-missing">Citations not indexed</span>';
+  return `<span class="citation-count">${number.format(count)} indexed ${count === 1 ? "citation" : "citations"}</span><span>${esc(r.citations_source || "Source unavailable")} · ${r.citations_as_of ? `retrieved ${dateLabel(r.citations_as_of, { year: "numeric" })}` : "retrieval date unavailable"}</span>`;
 }
 function chart() {
   const weeks = summary.weeks
@@ -143,7 +160,7 @@ function researchToolbar() {
             "",
           )}</select><label class="sr-only" for="basis-filter">Date basis</label><select id="basis-filter" class="select"><option value="published" ${filters.dateBasis === "published" ? "selected" : ""}>First public / event</option><option value="discovered" ${filters.dateBasis === "discovered" ? "selected" : ""}>First collected</option></select>`
       : ""
-  }</div>`;
+  }<div class="sort-control"><label for="sort-filter">Sort by</label><select id="sort-filter" class="select">${Object.entries(SORTS).map(([id, label]) => `<option value="${id}" ${filters.sort === id ? "selected" : ""}>${label}</option>`).join("")}</select></div>${page === "research" ? `<div class="year-control"><label class="sr-only" for="year-filter">Publication year</label><select id="year-filter" class="select"><option value="">All years</option>${[...new Set(records.map(publicationYear).filter(Boolean))].sort((a, b) => b - a).map((year) => `<option value="${year}" ${filters.year === String(year) ? "selected" : ""}>${year}</option>`).join("")}</select></div>` : ""}</div>`;
 }
 function listShell() {
   return `<section aria-labelledby="research-heading"><div class="section-heading"><div><h2 id="research-heading">${page === "overview" ? "This week’s reading" : "Research library"}</h2><p>${page === "overview" ? "Papers, conference contributions, and reports." : "Search the collected corpus. Related publication versions are grouped."}</p></div>${page === "overview" ? `<a class="text-link" href="/research/?week=${filters.week}">Explore all research ↗</a>` : ""}</div><div class="research-panel">${researchToolbar()}<div id="results"></div></div></section>`;
@@ -161,7 +178,7 @@ function item(r) {
   const authors =
     r.authors.slice(0, 4).join(", ") +
     (r.authors.length > 4 ? ` +${r.authors.length - 4} authors` : "");
-  return `<li class="research-item"><div class="item-date">${d ? dateLabel(d) : "Undated"}<span>${d ? dayKey(d).slice(0, 4) : "Source date missing"}</span></div><div class="item-body"><div class="item-heading"><span class="kind-badge">${KINDS[r.kind]}${r.presentation_status === "accepted" ? " · Accepted" : ""}</span><span class="item-source">${esc(r.venue || sourceName(r.source))}${r.linked_record_ids.length > 1 ? " · Linked versions" : ""}</span></div><h3><button class="item-title" data-detail="${r.id}">${esc(r.title)}</button></h3><p class="item-authors">${esc(authors || "Author metadata unavailable")}</p><div class="item-tags">${r.topics
+  return `<li class="research-item"><div class="item-date">${d ? dateLabel(d) : "Day unavailable"}<span>${publicationYear(r) || "Year unavailable"}</span></div><div class="item-body"><div class="item-heading"><span class="kind-badge">${KINDS[r.kind]}${r.presentation_status === "accepted" ? " · Accepted" : ""}</span><span class="item-source">${esc(r.venue || sourceName(r.source))}${r.linked_record_ids.length > 1 ? " · Linked versions" : ""}</span></div><h3><button class="item-title" data-detail="${r.id}">${esc(r.title)}</button></h3><p class="item-authors">${esc(authors || "Author metadata unavailable")}</p><div class="item-citations">${citationLabel(r)}</div><div class="item-tags">${r.topics
     .slice(0, 4)
     .map((t) => `<span class="tag">${esc(topicName(t))}</span>`)
     .join(
@@ -176,15 +193,20 @@ function renderResults() {
     (pageNumber - 1) * PAGE_SIZE,
     pageNumber * PAGE_SIZE,
   );
+  const citationCoverage = selected.filter((r) => citationCount(r) !== null).length;
+  const sortNote = filters.sort === "citations" ? `<p class="sort-note">${number.format(citationCoverage)} of ${number.format(selected.length)} results have indexed citations. Unavailable counts follow known counts, including zero. OpenAlex is used when available, otherwise Crossref; their coverage differs. <a href="/guides/sorting-papers-without-ranking-quality/">Understand this order</a>.</p>` : "";
   document.querySelector("#results").innerHTML =
-    `<div class="result-meta"><span role="status" aria-live="polite">${number.format(selected.length)} results · publication versions grouped</span><button class="button" id="export-csv" ${selected.length ? "" : "disabled"}>Export CSV ↓</button></div>${visible.length ? `<ol class="research-list">${visible.map(item).join("")}</ol>` : `<div class="empty-state"><h3>No matching research</h3><p>${filters.week === "all" ? "Try a different topic, material type, or search term." : "No collected materials match this period and your filters. Missing source coverage is not evidence of no research."}</p><button class="button" id="reset-filters">Reset filters</button> <a href="/research/?week=all" class="text-link">Browse all dates</a></div>`}<div class="pagination"><span>${selected.length ? `${(pageNumber - 1) * PAGE_SIZE + 1}–${Math.min(pageNumber * PAGE_SIZE, selected.length)} of ${number.format(selected.length)}` : "0 results"}</span><div class="pagination-controls"><button class="button" id="prev-page" ${pageNumber <= 1 ? "disabled" : ""}>← Previous</button><button class="button" id="next-page" ${pageNumber >= pages ? "disabled" : ""}>Next →</button></div></div>`;
+    `<div class="result-meta"><span role="status" aria-live="polite">${number.format(selected.length)} results · ${SORTS[filters.sort]} · publication versions grouped</span><button class="button" id="export-csv" ${selected.length ? "" : "disabled"}>Export CSV ↓</button></div>${sortNote}${visible.length ? `<ol class="research-list">${visible.map(item).join("")}</ol>` : `<div class="empty-state"><h3>No matching research</h3><p>${filters.week === "all" ? "Try a different topic, material type, or search term." : "No collected materials match this period and your filters. Missing source coverage is not evidence of no research."}</p><button class="button" id="reset-filters">Reset filters</button> <a href="/research/?week=all" class="text-link">Browse all dates</a></div>`}<div class="pagination"><span>${selected.length ? `${(pageNumber - 1) * PAGE_SIZE + 1}–${Math.min(pageNumber * PAGE_SIZE, selected.length)} of ${number.format(selected.length)}` : "0 results"}</span><div class="pagination-controls"><button class="button" id="prev-page" ${pageNumber <= 1 ? "disabled" : ""}>← Previous</button><button class="button" id="next-page" ${pageNumber >= pages ? "disabled" : ""}>Next →</button></div></div>`;
   document
     .querySelectorAll("[data-detail]")
     .forEach((el) =>
       el.addEventListener("click", () => openDetail(el.dataset.detail)),
     );
+  const reading = document.querySelector("#reading-paths");
+  if (reading) reading.innerHTML = readingPaths();
   document.querySelector("#prev-page").onclick = () => {
     pageNumber--;
+    updateURL();
     renderResults();
     document
       .querySelector("#research-heading")
@@ -192,13 +214,14 @@ function renderResults() {
   };
   document.querySelector("#next-page").onclick = () => {
     pageNumber++;
+    updateURL();
     renderResults();
     document
       .querySelector("#research-heading")
       .scrollIntoView({ block: "start" });
   };
   document.querySelector("#reset-filters")?.addEventListener("click", () => {
-    filters = { ...filters, query: "", topic: "", kind: "", source: "" };
+    filters = { ...filters, query: "", topic: "", kind: "", source: "", year: "" };
     pageNumber = 1;
     updateURL();
     renderPage();
@@ -215,12 +238,13 @@ function renderResults() {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 }
-function updateURL() {
+function updateURL(replace = false) {
   const p = new URLSearchParams();
-  for (const key of ["week", "query", "topic", "kind", "source", "dateBasis"])
+  for (const key of ["week", "query", "topic", "kind", "source", "dateBasis", "sort", "year"])
     if (filters[key] && !(key === "dateBasis" && filters[key] === "published"))
       p.set(key, filters[key]);
-  history.replaceState(null, "", location.pathname + "?" + p);
+  if (pageNumber > 1) p.set("page", pageNumber);
+  history[replace ? "replaceState" : "pushState"](null, "", location.pathname + (p.size ? "?" + p : ""));
 }
 function bindFilters() {
   document.querySelector("#week-select")?.addEventListener("change", (e) => {
@@ -234,6 +258,8 @@ function bindFilters() {
     ["kind-filter", "kind"],
     ["source-filter", "source"],
     ["basis-filter", "dateBasis"],
+    ["sort-filter", "sort"],
+    ["year-filter", "year"],
   ])
     document.getElementById(id)?.addEventListener("change", (e) => {
       filters[key] = e.target.value;
@@ -247,7 +273,7 @@ function bindFilters() {
     timer = setTimeout(() => {
       filters.query = e.target.value;
       pageNumber = 1;
-      updateURL();
+      updateURL(true);
       renderResults();
     }, 160);
   });
@@ -277,7 +303,7 @@ function overview() {
               "",
             )}<span class="chart-note">vs. previous four weeks</span></div></div>`
         : ""
-    }${w.status === "in_progress" ? '<p class="notice quiet-notice">This week is still in progress. Counts are provisional; growth comparisons are withheld.</p>' : ""}${editorialSpotlight()}${listShell()}`
+    }${w.status === "in_progress" ? '<p class="notice quiet-notice">This week is still in progress. Counts are provisional; growth comparisons are withheld.</p>' : ""}${editorialSpotlight()}${listShell()}<div id="reading-paths"></div>`
   );
 }
 function archive() {
@@ -305,7 +331,7 @@ function methodology() {
       "Understand what is collected, how it is counted, and where coverage ends.",
     ) +
     freshness() +
-    `<div class="method-grid" style="margin-top:32px"><article class="prose"><h2>A defined view of research</h2><p>This observatory follows quantum computing and quantum information through selected public sources. Counts describe this collected corpus, not all research worldwide. There are currently ${number.format(summary.totals.records)} source records, grouped into ${number.format(summary.totals.research)} research works, plus ${number.format(summary.totals.talks)} conference contributions and ${number.format(summary.totals.reports)} reports.</p><h2>What counts as new?</h2><p>Research is assigned to the week of its earliest known public appearance. An arXiv revision does not become a new paper. A journal publication with an explicit DOI or arXiv link is grouped with its preprint. Similar titles alone are never enough to merge records.</p><p>Publication dates and collection dates are distinct. Use “First collected” in the Research view to find late-indexed or newly discovered materials. Date-only metadata retains the publisher’s calendar date; timestamps are converted to Korea Standard Time.</p><h2>Weekly periods and comparisons</h2><p>A week runs from Monday 00:00 to the next Monday 00:00 in Korea Standard Time. Collection is scheduled for Monday 09:17 KST. Historical activity is reconstructed from publication metadata. Comparisons require complete, matching research-source coverage. Current and incomplete weeks do not receive growth percentages.</p><p>Topic share is the number of research works carrying a tag divided by all research works that week. Rising topics compare that share with the previous four weeks and require at least five works in the selected week. Multi-topic percentages can total more than 100%.</p><h2>Conference contributions and reports</h2><p>QIP entries are accepted contributions from the official conference list, not independently verified recordings of delivered talks. The conference date range is retained; an individual presentation date is not invented. Conference editions are configured explicitly and must be updated for a new year.</p><p>Report publication dates are used only when explicitly available. A file’s upload directory is not treated as its publication date. ${number.format(summary.totals.undated)} records currently have no precise publication or event date and are available under “All collected dates.” DOE OSTI discovers technical reports through its official API. GAO records are included only after explicit configuration and review; the NQI browser-rendered library is not collected automatically.</p><h2>Classification and source limits</h2><p>Eight transparent topic dictionaries match titles and available arXiv abstracts. These are rule-based tags, not an assessment of scientific quality. Untagged physics and journal results are excluded; official conference and report records remain discoverable even if unclassified.</p><p>Crossref currently covers PRX Quantum, Quantum, and npj Quantum Information. Citation metadata is supplementary and carries a retrieval date. Publisher abstracts and PDFs are not mirrored. arXiv abstracts are displayed with attribution and a source link.</p><h2>Updates and reproducibility</h2><p>Successful source checkpoints, record identifiers, classification rules, collection manifests, and content hashes are stored with the data. A 14-day overlap catches many indexing delays; early-month runs revisit at least 12 weeks. Longer delays can still be missed. Required-source failure blocks publication; optional-source failures are visible here.</p><p>Scheduled jobs can be delayed or disabled by the hosting service. The last successful collection remains visible, and the website marks an update overdue after eight days.</p><p><a href="/data/summary.json">Download statistics JSON</a> · <a href="/data/manifest.json">View collection manifest</a></p></article><aside><section class="panel"><div class="panel-heading"><div><h2>Source coverage</h2><p>Latest collection attempt</p></div></div><ul class="source-list">${sources.map((s) => `<li><div class="source-head"><a href="${esc(safeURL(s.url))}" target="_blank" rel="noopener noreferrer">${esc(s.name)} ↗</a><span class="source-status ${esc(s.status)}">${statusLabel(s.status)}</span></div><p>${esc(sourceMessage(s))}</p><div class="source-stats">${s.last_success ? `Last success ${dateLabel(s.last_success, { year: "numeric" })}` : "No successful automated collection"}${s.included !== undefined ? ` · ${number.format(s.included)} included this run` : ""}</div></li>`).join("")}</ul></section><p class="chart-note" style="margin-top:16px">A failed source is missing coverage, not a zero-research result.</p></aside></div>`
+    `<div class="method-grid" style="margin-top:32px"><article class="prose"><h2>A defined view of research</h2><p>This observatory follows quantum computing and quantum information through selected public sources. Counts describe this collected corpus, not all research worldwide. There are currently ${number.format(summary.totals.records)} source records, grouped into ${number.format(summary.totals.research)} research works, plus ${number.format(summary.totals.talks)} conference contributions and ${number.format(summary.totals.reports)} reports.</p><h2>What counts as new?</h2><p>Research is assigned to the week of its earliest known public appearance. An arXiv revision does not become a new paper. A journal publication with an explicit DOI or arXiv link is grouped with its preprint. Similar titles alone are never enough to merge records.</p><p>Publication dates and collection dates are distinct. Use “First collected” in the Research view to find late-indexed or newly discovered materials. Date-only metadata retains the publisher’s calendar date; timestamps are converted to Korea Standard Time.</p><h2>Weekly periods and comparisons</h2><p>A week runs from Monday 00:00 to the next Monday 00:00 in Korea Standard Time. Collection is scheduled for Monday 09:17 KST. Historical activity is reconstructed from publication metadata. Comparisons require complete, matching research-source coverage. Current and incomplete weeks do not receive growth percentages.</p><p>Topic share is the number of research works carrying a tag divided by all research works that week. Rising topics compare that share with the previous four weeks and require at least five works in the selected week. Multi-topic percentages can total more than 100%.</p><h2>Conference contributions and reports</h2><p>QIP entries are accepted contributions from the official conference list, not independently verified recordings of delivered talks. The conference date range is retained; an individual presentation date is not invented. Conference editions are configured explicitly and must be updated for a new year.</p><p>Report publication dates are used only when explicitly available. A file’s upload directory is not treated as its publication date. ${number.format(summary.totals.undated)} records currently have no precise publication or event date and are available under “All collected dates.” DOE OSTI discovers technical reports through its official API. GAO records are included only after explicit configuration and review; the NQI library is collected from its embedded public metadata, retaining partial date precision.</p><h2>Classification and source limits</h2><p>Eight transparent topic dictionaries match titles and available arXiv abstracts. These are rule-based tags, not an assessment of scientific quality. Untagged physics and journal results are excluded; official conference and report records remain discoverable even if unclassified.</p><p>Crossref currently covers PRX Quantum, Quantum, and npj Quantum Information. Citation sorting uses one measurement per linked work: OpenAlex when available, otherwise Crossref. Provider coverage differs, and missing counts are not zeros. Measurements carry their provider and actual retrieval date. The bounded OpenAlex budget rotates through unique DOIs, refreshing the oldest snapshots first. Year sorting uses the earliest known public year; journal-only partial years are retained without inventing a day. See the <a href="/guides/sorting-papers-without-ranking-quality/">sorting guide</a> for interpretation and limits. Publisher abstracts and PDFs are not mirrored. arXiv abstracts are displayed with attribution and a source link.</p><h2>Updates and reproducibility</h2><p>Successful source checkpoints, record identifiers, classification rules, collection manifests, and content hashes are stored with the data. A 14-day overlap catches many indexing delays; early-month runs revisit at least 12 weeks. Longer delays can still be missed. Required-source failure blocks publication; optional-source failures are visible here.</p><p>Scheduled jobs can be delayed or disabled by the hosting service. The last successful collection remains visible, and the website marks an update overdue after eight days.</p><p><a href="/data/summary.json">Download statistics JSON</a> · <a href="/data/manifest.json">View collection manifest</a></p></article><aside><section class="panel"><div class="panel-heading"><div><h2>Source coverage</h2><p>Latest collection attempt</p></div></div><ul class="source-list">${sources.map((s) => `<li><div class="source-head"><a href="${esc(safeURL(s.url))}" target="_blank" rel="noopener noreferrer">${esc(s.name)} ↗</a><span class="source-status ${esc(s.status)}">${statusLabel(s.status)}</span></div><p>${esc(sourceMessage(s))}</p><div class="source-stats">${s.last_success ? `Last success ${dateLabel(s.last_success, { year: "numeric" })}` : "No successful automated collection"}${s.included !== undefined ? ` · ${number.format(s.included)} included this run` : ""}</div></li>`).join("")}</ul></section><p class="chart-note" style="margin-top:16px">A failed source is missing coverage, not a zero-research result.</p></aside></div>`
   );
 }
 function renderPage() {
@@ -318,7 +344,7 @@ function renderPage() {
         true,
       ) +
       freshness() +
-      `<div style="margin-top:30px">${listShell()}</div>`;
+      `${libraryIntroduction()}<div style="margin-top:30px">${listShell()}</div><div id="reading-paths"></div>`;
   else if (page === "archive") app.innerHTML = archive();
   else app.innerHTML = methodology();
   revealPage(app);
@@ -353,11 +379,12 @@ async function openDetail(id) {
       detailCache.set(index.detail_shard, await res.json());
     }
     if (activeDetail !== id || !dialog.open) return;
-    const r = detailCache.get(index.detail_shard)[id];
+    const detail = detailCache.get(index.detail_shard)[id];
+    const r = detail ? { ...detail, ...index, abstract: detail.abstract } : null;
     if (!r) throw Error("Missing detail");
     const linked = records.filter((x) => r.linked_record_ids.includes(x.id));
     document.querySelector("#detail-content").innerHTML =
-      `<div class="detail-top"><span class="small-label">${KINDS[r.kind]}${r.presentation_status === "accepted" ? " · Accepted contribution" : ""}</span><button class="icon-button" id="close-detail" aria-label="Close research detail">×</button></div><div class="detail-inner"><span class="item-source">${esc(r.venue || sourceName(r.source))}</span><h2 id="detail-title">${esc(r.title)}</h2><p class="authors">${esc(r.authors.join(", ") || "Author metadata unavailable")}</p><div class="item-tags">${r.topics.map((t) => `<span class="tag">${esc(summary.topics[t]?.label || t)}</span>`).join("")}</div><dl class="detail-meta"><div><dt>${r.kind === "talk" ? "Conference dates" : "First public appearance"}</dt><dd>${r.kind === "talk" ? `${dateLabel(r.date, { year: "numeric" })} – ${dateLabel(r.event_end, { year: "numeric" })}` : dateLabel(effectiveDate(r), { year: "numeric" })}</dd></div><div><dt>Collected</dt><dd>${dateLabel(r.observed_at, { year: "numeric" })}</dd></div><div><dt>Identifier</dt><dd>${esc(r.doi || r.arxiv_id || sourceName(r.source))}</dd></div><div><dt>Source</dt><dd>${esc(sourceName(r.source))}${r.version ? ` · v${r.version}` : ""}</dd></div></dl><h3>${r.abstract ? "Abstract" : "Source material"}</h3><p class="abstract">${r.abstract ? esc(r.abstract) : "An abstract is not available in this snapshot. Follow the original source for the full material."}</p>${linked.length > 1 ? `<h3 style="margin-top:26px">Linked records</h3><ul class="linked-list">${linked.map((x) => `<li><a href="${esc(safeURL(x.url))}" target="_blank" rel="noopener noreferrer">${esc(KINDS[x.kind])} · ${esc(x.venue || sourceName(x.source))}</a></li>`).join("")}</ul>` : ""}<div class="detail-links"><a class="button primary" href="${esc(safeURL(r.url))}" target="_blank" rel="noopener noreferrer">Read original ↗</a>${r.arxiv_id ? `<a class="button" href="https://arxiv.org/pdf/${encodeURIComponent(r.arxiv_id)}" target="_blank" rel="noopener noreferrer">Open PDF ↗</a>` : ""}</div><p class="detail-footnote">Metadata from ${esc(sourceName(r.source))}. ${r.citations != null ? `${number.format(r.citations)} indexed citations as of ${dateLabel(r.citations_as_of, { year: "numeric" })}. ` : ""}Topic tags are assigned by transparent rules. ${r.presentation_status === "accepted" ? "Acceptance and the conference date range do not verify an individual talk was delivered." : ""}</p></div>`;
+      `<div class="detail-top"><span class="small-label">${KINDS[r.kind]}${r.presentation_status === "accepted" ? " · Accepted contribution" : ""}</span><button class="icon-button" id="close-detail" aria-label="Close research detail">×</button></div><div class="detail-inner"><span class="item-source">${esc(r.venue || sourceName(r.source))}</span><h2 id="detail-title">${esc(r.title)}</h2><p class="authors">${esc(r.authors.join(", ") || "Author metadata unavailable")}</p><div class="item-tags">${r.topics.map((t) => `<span class="tag">${esc(summary.topics[t]?.label || t)}</span>`).join("")}</div><dl class="detail-meta"><div><dt>${r.kind === "talk" ? "Conference dates" : "First public appearance"}</dt><dd>${r.kind === "talk" ? `${dateLabel(r.date, { year: "numeric" })} – ${dateLabel(r.event_end, { year: "numeric" })}` : dateLabel(effectiveDate(r), { year: "numeric" })}</dd></div><div><dt>Collected</dt><dd>${dateLabel(r.observed_at, { year: "numeric" })}</dd></div><div><dt>Identifier</dt><dd>${esc(r.doi || r.arxiv_id || sourceName(r.source))}</dd></div><div><dt>Source</dt><dd>${esc(sourceName(r.source))}${r.version ? ` · v${r.version}` : ""}</dd></div></dl><div class="item-citations">${citationLabel(r)}</div><h3>${r.abstract ? "Abstract" : "Source material"}</h3><p class="abstract">${r.abstract ? esc(r.abstract) : "An abstract is not available in this snapshot. Follow the original source for the full material."}</p>${linked.length > 1 ? `<h3 style="margin-top:26px">Linked records</h3><ul class="linked-list">${linked.map((x) => `<li><a href="${esc(safeURL(x.url))}" target="_blank" rel="noopener noreferrer">${esc(KINDS[x.kind])} · ${esc(x.venue || sourceName(x.source))}</a></li>`).join("")}</ul>` : ""}<div class="detail-links"><a class="button primary" href="${esc(safeURL(r.url))}" target="_blank" rel="noopener noreferrer">Read original ↗</a>${r.arxiv_id ? `<a class="button" href="https://arxiv.org/pdf/${encodeURIComponent(r.arxiv_id)}" target="_blank" rel="noopener noreferrer">Open PDF ↗</a>` : ""}</div><p class="detail-footnote">Metadata from ${esc(sourceName(r.source))}. ${citationCount(r) !== null ? "Citation counts use linked work metadata; publication versions are not added together. " : ""}Topic tags are assigned by transparent rules. ${r.presentation_status === "accepted" ? "Acceptance and the conference date range do not verify an individual talk was delivered." : ""}</p></div>`;
     document.querySelector("#close-detail").onclick = () => closeDetail(dialog);
     document.querySelector("#close-detail").focus();
   } catch {
@@ -391,6 +418,32 @@ document.addEventListener("keydown", (e) => {
     }
   }
 });
+function restoreFilters() {
+  const params = new URLSearchParams(location.search);
+  filters = {
+    week: params.get("week") || (page === "research" ? "all" : summary.last_complete_week),
+    query: params.get("query") || "",
+    topic: params.get("topic") || "",
+    kind: params.get("kind") || "",
+    source: params.get("source") || "",
+    dateBasis: params.get("dateBasis") === "discovered" ? "discovered" : "published",
+    sort: normalizeSort(params.get("sort")),
+    year: params.get("year") || "",
+  };
+  if (!summary.weeks.some((w) => w.id === filters.week) && !(filters.week === "all" && page === "research"))
+    filters.week = summary.last_complete_week;
+  if (filters.topic && !summary.topics[filters.topic]) filters.topic = "";
+  if (filters.source && !sources.some((s) => s.id === filters.source)) filters.source = "";
+  if (filters.kind && filters.kind !== "papers" && !KINDS[filters.kind]) filters.kind = "";
+  if (!records.some((r) => String(publicationYear(r)) === filters.year)) filters.year = "";
+  const requestedPage = Number(params.get("page"));
+  pageNumber = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+}
+window.addEventListener("popstate", () => {
+  if (!summary) return;
+  restoreFilters();
+  renderPage();
+});
 async function load() {
   try {
     const [s, r, m, e] = await Promise.all(
@@ -408,22 +461,7 @@ async function load() {
     editorial = e;
     if (r.run_id !== s.run_id || m.run_id !== s.run_id || r.build_id !== s.build_id || m.build_id !== s.build_id || e.build_id !== s.build_id)
       throw Error("Snapshot versions do not match");
-    filters = {
-      week:
-        params.get("week") ||
-        (page === "research" ? "all" : summary.last_complete_week),
-      query: params.get("query") || "",
-      topic: params.get("topic") || "",
-      kind: params.get("kind") || "",
-      source: params.get("source") || "",
-      dateBasis:
-        params.get("dateBasis") === "discovered" ? "discovered" : "published",
-    };
-    if (
-      !summary.weeks.some((w) => w.id === filters.week) &&
-      !(filters.week === "all" && page === "research")
-    )
-      filters.week = summary.last_complete_week;
+    restoreFilters();
     renderPage();
   } catch {
     app.setAttribute("aria-busy", "false");

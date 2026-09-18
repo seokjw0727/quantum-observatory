@@ -11,9 +11,9 @@ An English-language research observatory for quantum computing and quantum infor
 - Optional, budget-bounded OpenAlex DOI enrichment.
 - Eight topic dictionaries, DOI/arXiv linking, immutable first-seen dates, and preserved revision events.
 - Weekly research counts, topic distributions, comparison eligibility, and an archive.
-- Title/author/identifier search, material/topic/source/date filters, grouped versions, pagination, CSV export, and on-demand abstract details.
+- Title/author/identifier search, material/topic/source/date/year filters, newest/oldest/citation/title sorting, grouped versions, URL-restored pagination and browser history, CSV export with citation provenance, and on-demand abstract details.
 - Light/dark themes, responsive layouts, keyboard navigation, native detail dialogs, and chart data tables.
-- Crawlable route-specific HTML, ten original analysis and guide articles, and transparent editorial, privacy, and correction policies.
+- Crawlable route-specific HTML, fourteen analysis and guide articles, including three source-based paper readings and a curated error-correction reading path, and transparent editorial, privacy, and correction policies.
 - Publisher verification uses a reviewed `ads.txt` record. Advertising delivery remains disabled until consent configuration and placements are reviewed.
 - GitHub Actions for validation, weekly collection, durable data-branch updates, and Cloudflare Pages Direct Upload.
 
@@ -99,7 +99,7 @@ No deployed URL is implied by the source bundle. Account configuration and a suc
 - Production data is persisted only after a valid build. An upload failure can be retried without collecting again.
 - GitHub scheduled events may be delayed, dropped, or disabled after long inactivity in public repositories. Manual dispatch remains available. The UI marks snapshots older than eight days as overdue.
 
-To rebuild/deploy code changes without recollecting: manually run **Collect and publish**, set `collect` to false, and leave `deploy` true. A push to `master` that changes the application, pipeline, configuration, deployment scripts, or publication workflow triggers collection and a validated rebuild. Deployment runs when the Cloudflare variables and secret are configured. Documentation-only and test-only pushes run code validation without publishing.
+To rebuild/deploy code changes without recollecting: manually run **Collect and publish**, set `collect` to false, and leave `deploy` true. A push to `master` that changes the application, pipeline, configuration, content, deployment scripts, or publication workflow restores the last durable snapshot and publishes a validated rebuild without recollection. This lets content and code fixes deploy while a scholarly API is rate limited. Scheduled and explicit manual collection still requires successful required sources before records or checkpoints advance. Deployment runs when the Cloudflare variables and secret are configured. Documentation-only and test-only pushes run code validation without publishing.
 
 ## Counting and scientific limitations
 
@@ -110,10 +110,10 @@ To rebuild/deploy code changes without recollecting: manually run **Collect and 
 - Current/incomplete weeks, zero baselines, and mismatched source coverage do not receive growth percentages.
 - Publication metadata reconstructed today is not a historical snapshot of what was known then. First-seen history begins when this collector starts.
 - QIP accepted entries are not proof that each presentation was delivered. Conference-year URLs require an explicit config update. The exact individual talk time is not invented.
-- OSTI uses its API-provided publication calendar date. The NQI library is not collected automatically because its browser-rendered index does not expose a stable public feed. Upload-path dates are never treated as publication dates.
+- OSTI uses its API-provided publication calendar date. The NQI library is collected from its embedded publications JSON when available. Partial dates stay partial, and upload-path dates are never treated as publication dates.
 - GAO is a configured-page monitor, not an exhaustive new-report search. DOE OSTI supplies automated technical-report discovery.
 - Crossref abstracts are not redistributed by default. arXiv abstract display links to its original record; PDFs remain at their source.
-- OpenAlex is optional. Without a key, the UI reports it as unconfigured. Its enrichment budget is capped in `sources.json`.
+- OpenAlex is optional. Without a key, a bounded keyless budget is used. Unique DOIs rotate through the budget, refreshing the oldest enrichment snapshots first. Failed requests preserve existing measurements and retrieval dates. Its enrichment budget is capped in `sources.json`.
 - The index is loaded once; details are split into source/hash shards. The build checks Pages asset size and count limits. Large future corpora should move long-term partitions to R2 and introduce a search API.
 
 ## Manual corrections
@@ -139,7 +139,7 @@ Use actual stable record IDs from the index. Rebuild after changes. Record the r
 
 Tests exercise timezone boundaries, version idempotency, DOI linking, false title matches, undated records, failed-source preservation, partial dates, conference parsing, report-type filtering, search/grouping, unsafe URLs, CSV injection, and empty chart series. Artifact checks verify every route and asset, unique IDs, linked-record integrity, matching run IDs, detail shards, and file limits.
 
-Browser visual/end-to-end testing has not been performed in this environment. Test the deployed preview on desktop/mobile before treating the first deployment as production-ready for a broader audience.
+The AdSense remediation includes desktop/mobile browser inspection and functional checks of sorting, filtering, pagination, browser history, and source-based readings. See the remediation report for the specific build and evidence. Test the deployed preview on desktop/mobile before treating the first deployment as production-ready for a broader audience.
 
 ## Source documentation
 
@@ -152,3 +152,9 @@ Browser visual/end-to-end testing has not been performed in this environment. Te
 - [OpenAlex authentication](https://help.openalex.org/api/authentication/)
 - [GitHub schedules](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)
 - [Cloudflare Pages CI upload](https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/)
+
+## Year and citation sorting
+
+Sorting runs across all matching grouped results before paging. Year is the earliest known public year, including partial journal dates without fabricated days. Missing citation measurements sort after numeric zero. A linked work uses one OpenAlex measurement where available, otherwise one Crossref measurement, retaining provider and retrieval date; versions are never summed. Provider coverage differs, so combined citation order is a discovery aid rather than a quality ranking. The index carries this metadata without fetching detail shards for sorting. URLs preserve sort, year, filters, and page; popstate restores controls and results. CSV exports the whole matching order and its provenance.
+
+The arXiv adapter sorts by lastUpdatedDate, stops after the checkpoint overlap, and spaces API requests by at least ten seconds. It preserves revisions of older submissions rather than restricting submission dates. HTTP 429 still blocks required-source publication rather than becoming an empty successful result. Code/content deployment remains independent of collection.

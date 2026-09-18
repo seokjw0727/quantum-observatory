@@ -7,6 +7,7 @@ import {
   safeURL,
   toCSV,
   chartPoints,
+  normalizeSort,
 } from "../web/assets/core.js";
 const a = {
   id: "a",
@@ -64,4 +65,30 @@ test("zero series produces finite chart coordinates", () => {
       (p) => Number.isFinite(p.x) && Number.isFinite(p.y),
     ),
   );
+});
+test("citation order distinguishes unknown from zero and sorts the entire corpus", () => {
+  const rows = Array.from({ length: 45 }, (_, i) => ({ ...a, id: `paper-${i}`, work_id: `work-${i}`, citations: i, publication_year: 2026 }));
+  rows.push({ ...a, id: "unknown", work_id: "unknown", citations: null });
+  const sorted = selectRecords(rows, { sort: "citations" });
+  assert.equal(sorted[0].citations, 44);
+  assert.equal(sorted.slice(20, 40)[0].citations, 24);
+  assert.equal(sorted.at(-2).citations, 0);
+  assert.equal(sorted.at(-1).id, "unknown");
+});
+test("oldest order and year filter retain partial years without fabricating a day", () => {
+  const partial = { ...a, id: "partial", work_id: "partial", first_published: null, publication_year: 2024 };
+  const undated = { ...partial, id: "undated", work_id: "undated", publication_year: null };
+  assert.deepEqual(selectRecords([a, partial, undated], { sort: "oldest" }).map((r) => r.id), ["partial", "a", "undated"]);
+  assert.equal(selectRecords([a, partial], { year: "2024" })[0].id, "partial");
+});
+test("ties are deterministic and CSV preserves citation provenance and missing values", () => {
+  const first = { ...a, id: "first", work_id: "first", citations: 0, citations_source: "Crossref", citations_as_of: "2026-09-07" };
+  const second = { ...first, id: "second", work_id: "second" };
+  assert.deepEqual(selectRecords([second, first], { sort: "citations" }).map((r) => r.id), ["first", "second"]);
+  assert.equal(selectRecords([a, b], { sort: "citations" }).length, 1);
+  const csv = toCSV([first, { ...a, citations: null }]);
+  assert.ok(csv.includes('"0","Crossref","2026-09-07"'));
+  assert.ok(csv.includes('"2026","","",""'));
+  assert.equal(normalizeSort("cite"), "citations");
+  assert.equal(normalizeSort("bad"), "latest");
 });

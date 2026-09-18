@@ -1,6 +1,320 @@
 {
   "articles": [
     {
+      "slug": "surface-code-memory-and-the-computation-gap",
+      "type": "analysis",
+      "title": "Below threshold: what a surface-code memory proves",
+      "description": "A reading of Acharya et al. that separates error suppression, a memory benchmark, and the requirements of a logical computation.",
+      "summary": "Increasing code distance can improve a logical memory while leaving important computational capabilities untested. Use the measured task, denominator, and decoder conditions to assess the claim.",
+      "author": "Quantum Observatory",
+      "published_at": "2026-09-18",
+      "updated_at": "2026-09-18",
+      "status": "published",
+      "sections": [
+        {
+          "heading": "The question and the reported result",
+          "paragraphs": [
+            "Acharya et al., in Quantum error correction below the surface code threshold, ask whether larger surface-code memories can reduce logical errors on superconducting hardware. Their distance-7 memory uses 101 qubits and reports 0.143% ± 0.003% logical error per correction cycle. Increasing distance by two yields an error-suppression factor of 2.14 ± 0.02. A separate distance-5 experiment integrates real-time decoding. These are reported experimental results from the linked manuscript, not measurements reproduced by this observatory."
+          ],
+          "source_indexes": [
+            1
+          ]
+        },
+        {
+          "heading": "Our reading: identify the task before the milestone",
+          "paragraphs": [
+            "For literature review, put “logical memory” in the first column of your comparison sheet. A stored state and an executed algorithm answer different engineering questions. Our interpretation is that evidence should travel with its task: write the demonstrated operation beside every performance number before deciding what that number supports. That simple habit prevents a headline about storage from silently becoming a claim about a whole computer.",
+            "Next, choose the denominator you need. Error per correction cycle is useful when the question concerns repeated storage. A project that needs a sequence of logical operations should also record the operation count, elapsed time, and accepted experimental trials. Do not convert one denominator into another unless the paper supplies the needed relationship. Leave a blank field when the relationship is unavailable; a blank preserves the uncertainty better than an assumed conversion."
+          ]
+        },
+        {
+          "heading": "A concrete comparison exercise",
+          "paragraphs": [
+            "Build two rows for your own reading notes: one for the memory experiment and one for the real-time decoding experiment. For each, record code distance, measured error, decoder, and the task whose output is evaluated. If a later experiment demonstrates a gate, add a third row rather than replacing the first row’s task label. You can then ask a narrow and answerable question: what new operation became protected, under which conditions?",
+            "Our recommended decision rule is to compare like tasks first. If the tasks differ, treat the papers as complementary evidence and state the missing bridge. A laboratory choosing its next experiment may value decoding integration differently from a theorist studying suppression. Neither purpose requires declaring one paper the universal winner."
+          ]
+        },
+        {
+          "heading": "Limits worth carrying into the next paper",
+          "paragraphs": [
+            "The manuscript also identifies rare correlated events in repetition-code experiments and notes that feedback into the logical circuit is not included in its decoder latency measurement. Those details qualify the scope of the reported demonstrations."
+          ],
+          "source_indexes": [
+            1
+          ]
+        },
+        {
+          "heading": "What we would check next",
+          "paragraphs": [
+            "Our follow-up questions concern integration: which gates are benchmarked with the same evaluation discipline, which outcomes are available during a running circuit, and how is performance monitored over the relevant experimental duration? These are questions for subsequent evidence, not claims that this paper supplies the answers. When using the observatory, search a specific operation as well as a hardware name. Read the newer work’s methods before treating publication date or citation count as progress.",
+            "Gottesman’s experimental discussion provides a useful separate starting point for thinking about success criteria. Use a stated criterion to organize your comparison, and explain whenever you adopt a different metric. This note is a source-based reading framework; it is not an independent reproduction or a resource estimate for a useful algorithm."
+          ],
+          "source_indexes": [
+            2
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "label": "Acharya et al. · Quantum error correction below the surface code threshold · v1",
+          "url": "https://arxiv.org/html/2408.13687v1",
+          "note": "Reviewed manuscript: Sections II, IV, and V; original preprint submitted August 24, 2024."
+        },
+        {
+          "label": "Gottesman · Quantum fault tolerance in small experiments",
+          "url": "https://arxiv.org/abs/1610.03507",
+          "note": "A proposed experimental criterion, rather than a hardware leaderboard."
+        }
+      ],
+      "topics": [
+        "error-correction",
+        "hardware"
+      ],
+      "paper_ids": [
+        "2408.13687"
+      ],
+      "paper": {
+        "title": "Quantum error correction below the surface code threshold",
+        "authors": "Rajeev Acharya et al.",
+        "year": 2024,
+        "version": "arXiv v1",
+        "url": "https://arxiv.org/abs/2408.13687"
+      }
+    },
+    {
+      "slug": "neutral-atom-logical-count-and-accepted-shots",
+      "type": "analysis",
+      "title": "48 logical qubits: read the acceptance conditions too",
+      "description": "How to read Bluvstein et al.’s neutral-atom processor work without reducing a collection of experiments to a single logical-qubit count.",
+      "summary": "A logical-qubit count becomes informative when paired with encoding, circuit, evaluation metric, and retained trials. This note offers a worksheet for comparing demonstrations with different selection conditions.",
+      "author": "Quantum Observatory",
+      "published_at": "2026-09-18",
+      "updated_at": "2026-09-18",
+      "status": "published",
+      "sections": [
+        {
+          "heading": "What this paper reports",
+          "paragraphs": [
+            "Bluvstein et al., in Logical quantum processor based on reconfigurable atom arrays, describe a programmable neutral-atom processor using up to 280 physical qubits. One demonstration uses [[8,3,2]] code blocks for sampling circuits with up to 48 logical qubits, 228 logical two-qubit gates, and 48 logical CCZ gates. The paper reports performance improvement using error detection. It also contains experiments with other encodings. The quoted counts belong to specified demonstrations, rather than one interchangeable benchmark."
+          ],
+          "source_indexes": [
+            1
+          ]
+        },
+        {
+          "heading": "Our reading: give every count an accompanying condition",
+          "paragraphs": [
+            "For a useful reading note, attach four fields to a logical-qubit count: encoding, circuit, evaluated output, and acceptance rule. If you cannot fill those fields, postpone the comparison. Our interpretation is that the count tells you how much encoded information participates in a specified task; it does not, by itself, answer how reliably a different task will finish. A larger count may be relevant to your question while still needing a different reliability measurement.",
+            "Imagine choosing a paper for a discussion about retained sampling outputs. You would ask how output quality is evaluated and which runs are retained. For a discussion about repeatedly protecting an unknown state, you would start with a storage protocol and its error definition instead. These are different review questions. State the one you intend to answer so the group does not accidentally compare incompatible quantities."
+          ]
+        },
+        {
+          "heading": "A worksheet for selection and cost",
+          "paragraphs": [
+            "Our suggested worksheet reserves adjacent columns for total attempted runs, retained runs, reported metric, and work per run. Ask whether the manuscript reports each item for the particular figure you are citing. This is a reading procedure, not an assertion about unavailable values. When a value is not reported in the passage you checked, mark it as unverified and name the section you need to inspect next.",
+            "As an illustrative calculation, suppose a hypothetical experiment retains 200 of 1,000 attempts. Its acceptance fraction is 20%; that value must accompany any accuracy reported only on those 200 outputs. These numbers are invented solely to explain the worksheet and are not results from this paper. Whether that trade is useful depends on the application and the resources needed for another attempt."
+          ]
+        },
+        {
+          "heading": "How this differs from a memory comparison",
+          "paragraphs": [
+            "Our comparison rule is to keep a selected-output benchmark and a memory error benchmark in separate rows. Then list the question each row can answer. A sampling application and a stored-state application can value different information. Without a shared output definition and accounting of trials, neither a gate count nor a logical-qubit count establishes a performance ordering between the two.",
+            "When discussing fault tolerance, define your experimental success criterion explicitly. Gottesman’s work is a separate reference for that discussion; it is not evidence that every demonstration in the neutral-atom paper satisfies an unstated universal criterion."
+          ],
+          "source_indexes": [
+            2
+          ]
+        },
+        {
+          "heading": "Questions to take back to the source",
+          "paragraphs": [
+            "Check which encoding and acceptance rule belong to the exact figure you plan to cite. Ask what happens when the circuit changes, which outputs remain interpretable, and what resource accounting your intended comparison needs. We recommend following the original manuscript rather than transferring a condition from one experiment to another. This article supplies an interpretation and a reading exercise; we have not reproduced the experiment or calculated a system-wide advantage.",
+            "In the research library, combine an operation name with a topic filter, then inspect publication versions and source links. Citations can help locate discussion of a result, but you should return to the cited passage before adopting its claim. A dated, task-specific note is more useful for a research meeting than a single rank."
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "label": "Bluvstein et al. · Logical quantum processor based on reconfigurable atom arrays · v1",
+          "url": "https://arxiv.org/html/2312.03982v1",
+          "note": "Reviewed manuscript: logical sampling demonstrations and error-detection conditions; submitted December 7, 2023."
+        },
+        {
+          "label": "Gottesman · Quantum fault tolerance in small experiments",
+          "url": "https://arxiv.org/abs/1610.03507",
+          "note": "A proposed experimental criterion, rather than a hardware leaderboard."
+        }
+      ],
+      "topics": [
+        "error-correction",
+        "hardware",
+        "information"
+      ],
+      "paper_ids": [
+        "2312.03982"
+      ],
+      "paper": {
+        "title": "Logical quantum processor based on reconfigurable atom arrays",
+        "authors": "Dolev Bluvstein et al.",
+        "year": 2023,
+        "version": "arXiv v1",
+        "url": "https://arxiv.org/abs/2312.03982"
+      }
+    },
+    {
+      "slug": "trapped-ion-logical-errors-and-physical-baselines",
+      "type": "analysis",
+      "title": "Better than physical: which circuit is the baseline?",
+      "description": "A source-based reading of da Silva et al. focused on full circuits, post-selection, and the denominator behind a logical-error improvement.",
+      "summary": "An improvement factor needs its physical baseline and selection rule. Use this paper to practice comparing an encoded circuit with the actual unencoded task, rather than a headline gate fidelity.",
+      "author": "Quantum Observatory",
+      "published_at": "2026-09-18",
+      "updated_at": "2026-09-18",
+      "status": "published",
+      "sections": [
+        {
+          "heading": "The experimental question",
+          "paragraphs": [
+            "Da Silva et al., in Demonstration of logical qubits and repeated error correction with better-than-physical error rates, evaluate fault-tolerant protocols on Quantinuum’s H2 trapped-ion processor. They compare classical outcomes of encoded circuits with corresponding unencoded circuits. Bell-state experiments use [[7,1,3]] and [[12,2,4]] codes. Reported improvement ranges depend on post-selection, and the [[12,2,4]] experiments include repeated error correction. The paper states that its parity-based metric is weaker than the distribution-distance criterion discussed by Gottesman."
+          ],
+          "source_indexes": [
+            1
+          ]
+        },
+        {
+          "heading": "Our reading: an improvement factor is a relationship",
+          "paragraphs": [
+            "When you encounter “better than physical,” write out the two experiments being compared. Our interpretation is that the ratio becomes meaningful only after you know what each circuit prepares, what operations it attempts, what it measures, and how failure is defined. Keep those fields alongside the ratio in your notes. If a review article gives only the ratio, use it as a pointer to the experiment rather than a complete comparison.",
+            "A component error and a complete-circuit output error answer different questions. Our suggested habit is to label both clearly before doing arithmetic. Ask whether they have the same denominator and whether the preparation and measurement steps belong to the reported quantity. Do not silently replace the paper’s unencoded baseline with a hardware specification from a different calibration or task."
+          ]
+        },
+        {
+          "heading": "A worked baseline check",
+          "paragraphs": [
+            "For your own worksheet, make separate encoded and unencoded rows. Record target output, output test, selection rule, attempted trials, and failure statistic. Then describe why the tasks are comparable. That sentence forces you to expose the assumption behind the improvement factor. If you cannot write it, revisit the methodology before using the number in a presentation.",
+            "Consider an illustrative pair of hypothetical circuits: the first fails in 4 of 100 accepted trials and the second in 1 of 100 accepted trials. The observed ratio is four, but the example leaves attempted-trial counts and uncertainty unspecified. It therefore cannot settle resource cost or statistical confidence. These invented numbers explain the check and are not measurements from da Silva et al. Keep both missing fields visible instead of converting an illustrative ratio into a claimed advantage."
+          ]
+        },
+        {
+          "heading": "Separate reported methodology from our inference",
+          "paragraphs": [
+            "The manuscript explains its complete-circuit comparison in the methodology section and distinguishes parity tests from a stronger output-distribution comparison. This is an explicit methodological qualification made by the authors."
+          ],
+          "source_indexes": [
+            1
+          ]
+        },
+        {
+          "heading": "What the comparison should ask next",
+          "paragraphs": [
+            "Our next questions would be whether the chosen success definition fits the application, how trial rejection is accounted for, and which additional operations the same comparison can evaluate. These questions extend the reading framework; they do not imply that the paper demonstrates all of those operations. Use the references to check the original success criterion and explain any difference between that criterion and the statistic you quote.",
+            "For a cross-platform literature review, we recommend a table of tasks and conditions before any ordered list of devices. A benchmark can be strong evidence for its own stated task while leaving another task unanswered. This note is an editorial interpretation based on the linked source; no experiments, error models, or compiler settings have been independently reproduced by the observatory."
+          ],
+          "source_indexes": [
+            2
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "label": "da Silva et al. · Demonstration of logical qubits and repeated error correction · v1",
+          "url": "https://arxiv.org/html/2404.02280v1",
+          "note": "Reviewed manuscript: methodology, logical Bell experiments, and repeated error correction; submitted April 2, 2024."
+        },
+        {
+          "label": "Gottesman · Quantum fault tolerance in small experiments",
+          "url": "https://arxiv.org/abs/1610.03507",
+          "note": "A proposed experimental criterion, rather than a hardware leaderboard."
+        }
+      ],
+      "topics": [
+        "error-correction",
+        "hardware"
+      ],
+      "paper_ids": [
+        "2404.02280"
+      ],
+      "paper": {
+        "title": "Demonstration of logical qubits and repeated error correction with better-than-physical error rates",
+        "authors": "M. P. da Silva et al.",
+        "year": 2024,
+        "version": "arXiv v1",
+        "url": "https://arxiv.org/abs/2404.02280"
+      }
+    },
+    {
+      "slug": "sorting-papers-without-ranking-quality",
+      "type": "guide",
+      "title": "Find papers by year and citations without ranking quality",
+      "description": "A practical guide to the observatory’s sorting controls, missing values, linked versions, and citation-source limits.",
+      "summary": "Use years to locate a period and citations to trace established discussion. Keep the source, retrieval date, and missing coverage with the number; neither order is a scientific-quality score.",
+      "author": "Quantum Observatory",
+      "published_at": "2026-09-18",
+      "updated_at": "2026-09-18",
+      "status": "published",
+      "sections": [
+        {
+          "heading": "Choose an order for the question you have",
+          "paragraphs": [
+            "Open Research, choose a topic or search term, and select Sort by. Year · newest first is the default; Year · oldest first helps trace a line of work from its earlier entries. Citations · most first can help find established discussion in the collected corpus. Title · A–Z is useful when you know part of a title and want a stable alphabetical scan. Sorting applies to all matching, grouped results before pagination, and CSV export follows that same order.",
+            "The Publication year filter narrows results to the earliest known public year of each linked work. A preprint first made public in 2023 and linked to a 2024 journal publication remains a 2023 work here. This is a discovery convention, not a claim that the journal published it in 2023. We retain a journal-only year when a source lacks a precise date; a known year does not imply a known day."
+          ]
+        },
+        {
+          "heading": "What an indexed citation count means here",
+          "paragraphs": [
+            "Each paper result shows a citation count when it is available, the provider, and its retrieval date. OpenAlex is preferred when a valid measurement is available for a linked work; otherwise the site uses Crossref. These providers observe different citation coverage. Their counts are not interchangeable and the combined order is an aid to discovery, not a calibrated ranking. OpenAlex documents cited_by_count as a work-level field; Crossref supplies deposited citation metadata through its REST API."
+          ],
+          "source_indexes": [
+            1,
+            2
+          ]
+        },
+        {
+          "heading": "Unknown is different from zero",
+          "paragraphs": [
+            "Citations not indexed means this snapshot has no usable measurement for the work. It does not mean nobody has cited it. A known zero remains a numeric measurement and sorts ahead of unknown counts. We never add citation counts from a preprint and its journal version. One linked work uses one provider measurement, preserving the measurement’s actual retrieval date.",
+            "Citation sorting displays how many matching results have a known count. Read that coverage line before interpreting the first page. A title without a DOI can still be valuable while lacking citation enrichment. The collector’s bounded OpenAlex budget rotates through unique DOIs and refreshes the oldest enrichment snapshots first. It does not promise that every measurement was refreshed during the latest collection. Check each row’s date."
+          ]
+        },
+        {
+          "heading": "A repeatable two-pass reading workflow",
+          "paragraphs": [
+            "For an unfamiliar topic, start with all dates and a topic filter. Scan citations to find candidate background reading, then switch to newest first to identify recent additions. Save the URL for each view. Open a candidate’s original source and record the exact claim you intend to use, its publication version, and the experiment or theorem that supports it. Our recommendation is to keep those notes alongside the bibliographic information rather than treating the count as evidence for the claim.",
+            "For a dated research meeting, apply a publication year filter and export the results. The CSV includes publication year, indexed citations, provider, and retrieval timestamp so collaborators can understand the view. Use the browser’s Back button to return to previous sort and filter states. If a result is absent, inspect topic rules, source coverage, date precision, and identifier linking before concluding that the paper or research activity does not exist."
+          ]
+        },
+        {
+          "heading": "Keep the limits with the result",
+          "paragraphs": [
+            "Our interpretation of these controls is deliberately task-specific: newest can mean timely, and cited can mean widely discussed, but neither says that a finding is correct, reproducible, relevant to your application, or affordable to implement. A strong literature review explains why a selected paper answers the question, not merely where it appears in an ordered list. When source coverage differs or counts are stale, retain that qualification in your exported notes."
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "label": "OpenAlex · Works data",
+          "url": "https://developers.openalex.org/api-reference/works",
+          "note": "Work metadata and citation-count field."
+        },
+        {
+          "label": "Crossref · REST API",
+          "url": "https://www.crossref.org/documentation/retrieve-metadata/rest-api/",
+          "note": "Deposited scholarly metadata; coverage depends on publisher deposits."
+        }
+      ],
+      "topics": [
+        "error-correction",
+        "algorithms",
+        "hardware",
+        "communication",
+        "quantum-ai",
+        "simulation",
+        "software",
+        "information"
+      ]
+    },
+    {
       "slug": "coverage-before-comparison",
       "type": "analysis",
       "title": "Check coverage before comparing two weeks",
@@ -48,9 +362,21 @@
         }
       ],
       "sources": [
-        {"label": "Crossref REST API filters", "url": "https://www.crossref.org/documentation/retrieve-metadata/rest-api/filter-names/", "note": "Documentation for publication and indexed-date filters used to retrieve metadata."},
-        {"label": "arXiv API user manual", "url": "https://info.arxiv.org/help/api/user-manual.html", "note": "Official description of arXiv API queries, results, and pagination."},
-        {"label": "Quantum Observatory methodology", "url": "https://qobservatory.com/methodology/", "note": "The observatory’s counting, linking, time-zone, and coverage rules."}
+        {
+          "label": "Crossref REST API filters",
+          "url": "https://www.crossref.org/documentation/retrieve-metadata/rest-api/filter-names/",
+          "note": "Documentation for publication and indexed-date filters used to retrieve metadata."
+        },
+        {
+          "label": "arXiv API user manual",
+          "url": "https://info.arxiv.org/help/api/user-manual.html",
+          "note": "Official description of arXiv API queries, results, and pagination."
+        },
+        {
+          "label": "Quantum Observatory methodology",
+          "url": "https://qobservatory.com/methodology/",
+          "note": "The observatory’s counting, linking, time-zone, and coverage rules."
+        }
       ]
     },
     {
@@ -101,9 +427,21 @@
         }
       ],
       "sources": [
-        {"label": "arXiv version availability", "url": "https://info.arxiv.org/help/availability.html", "note": "Official information about submissions and version availability."},
-        {"label": "Crossref relationships", "url": "https://www.crossref.org/documentation/schema-library/markup-guide-metadata-segments/relationships/", "note": "Crossref guidance for expressing relationships between research objects."},
-        {"label": "DOI Handbook", "url": "https://www.doi.org/doi-handbook/HTML/", "note": "The DOI Foundation’s reference for persistent identifiers and resolution."}
+        {
+          "label": "arXiv version availability",
+          "url": "https://info.arxiv.org/help/availability.html",
+          "note": "Official information about submissions and version availability."
+        },
+        {
+          "label": "Crossref relationships",
+          "url": "https://www.crossref.org/documentation/schema-library/markup-guide-metadata-segments/relationships/",
+          "note": "Crossref guidance for expressing relationships between research objects."
+        },
+        {
+          "label": "DOI Handbook",
+          "url": "https://www.doi.org/doi-handbook/HTML/",
+          "note": "The DOI Foundation’s reference for persistent identifiers and resolution."
+        }
       ]
     },
     {
@@ -154,9 +492,21 @@
         }
       ],
       "sources": [
-        {"label": "Quantum Observatory topic configuration", "url": "https://github.com/seokjw0727/quantum-observatory/blob/master/config/topics.json", "note": "The published keyword dictionaries used by the classifier."},
-        {"label": "Quantum Observatory methodology", "url": "https://qobservatory.com/methodology/", "note": "Definitions for topic share, rising topics, and overlapping labels."},
-        {"label": "Library of Congress: faceted application", "url": "https://www.loc.gov/catworkshop/fundamentals/part4.html", "note": "Background on using multiple facets to support retrieval rather than a single hierarchy."}
+        {
+          "label": "Quantum Observatory topic configuration",
+          "url": "https://github.com/seokjw0727/quantum-observatory/blob/master/config/topics.json",
+          "note": "The published keyword dictionaries used by the classifier."
+        },
+        {
+          "label": "Quantum Observatory methodology",
+          "url": "https://qobservatory.com/methodology/",
+          "note": "Definitions for topic share, rising topics, and overlapping labels."
+        },
+        {
+          "label": "Library of Congress: faceted application",
+          "url": "https://www.loc.gov/catworkshop/fundamentals/part4.html",
+          "note": "Background on using multiple facets to support retrieval rather than a single hierarchy."
+        }
       ]
     },
     {
@@ -207,9 +557,21 @@
         }
       ],
       "sources": [
-        {"label": "DORA declaration", "url": "https://sfdora.org/read/", "note": "Recommendations against using journal-based metrics as a substitute for assessing individual research."},
-        {"label": "Leiden Manifesto", "url": "https://www.nature.com/articles/520429a", "note": "Ten principles for responsible use of research metrics."},
-        {"label": "OpenAlex works overview", "url": "https://docs.openalex.org/api-entities/works", "note": "Documentation for works and citation-related fields used as optional enrichment."}
+        {
+          "label": "DORA declaration",
+          "url": "https://sfdora.org/read/",
+          "note": "Recommendations against using journal-based metrics as a substitute for assessing individual research."
+        },
+        {
+          "label": "Leiden Manifesto",
+          "url": "https://www.nature.com/articles/520429a",
+          "note": "Ten principles for responsible use of research metrics."
+        },
+        {
+          "label": "OpenAlex works overview",
+          "url": "https://docs.openalex.org/api-entities/works",
+          "note": "Documentation for works and citation-related fields used as optional enrichment."
+        }
       ]
     },
     {
@@ -260,9 +622,21 @@
         }
       ],
       "sources": [
-        {"label": "arXiv submission and version help", "url": "https://info.arxiv.org/help/submit/index.html", "note": "Official arXiv guidance covering submissions and replacements."},
-        {"label": "Crossref relationships", "url": "https://www.crossref.org/documentation/schema-library/markup-guide-metadata-segments/relationships/", "note": "How registered scholarly objects can express relationships."},
-        {"label": "Crossmark overview", "url": "https://www.crossref.org/services/crossmark/", "note": "Crossref service for surfacing corrections, retractions, and other updates."}
+        {
+          "label": "arXiv submission and version help",
+          "url": "https://info.arxiv.org/help/submit/index.html",
+          "note": "Official arXiv guidance covering submissions and replacements."
+        },
+        {
+          "label": "Crossref relationships",
+          "url": "https://www.crossref.org/documentation/schema-library/markup-guide-metadata-segments/relationships/",
+          "note": "How registered scholarly objects can express relationships."
+        },
+        {
+          "label": "Crossmark overview",
+          "url": "https://www.crossref.org/services/crossmark/",
+          "note": "Crossref service for surfacing corrections, retractions, and other updates."
+        }
       ]
     },
     {
@@ -313,9 +687,21 @@
         }
       ],
       "sources": [
-        {"label": "Crossref REST API tips", "url": "https://www.crossref.org/documentation/retrieve-metadata/rest-api/tips-and-tricks/", "note": "Official retrieval guidance, including cursor use and metadata caveats."},
-        {"label": "arXiv API user manual", "url": "https://info.arxiv.org/help/api/user-manual.html", "note": "Official query and result behavior for arXiv metadata."},
-        {"label": "Quantum Observatory methodology", "url": "https://qobservatory.com/methodology/", "note": "Definitions used by this site’s weekly counts."}
+        {
+          "label": "Crossref REST API tips",
+          "url": "https://www.crossref.org/documentation/retrieve-metadata/rest-api/tips-and-tricks/",
+          "note": "Official retrieval guidance, including cursor use and metadata caveats."
+        },
+        {
+          "label": "arXiv API user manual",
+          "url": "https://info.arxiv.org/help/api/user-manual.html",
+          "note": "Official query and result behavior for arXiv metadata."
+        },
+        {
+          "label": "Quantum Observatory methodology",
+          "url": "https://qobservatory.com/methodology/",
+          "note": "Definitions used by this site’s weekly counts."
+        }
       ]
     },
     {
@@ -366,9 +752,21 @@
         }
       ],
       "sources": [
-        {"label": "Quantum supremacy using a programmable superconducting processor", "url": "https://doi.org/10.1038/s41586-019-1666-5", "note": "Primary experimental paper defining a random-circuit sampling comparison."},
-        {"label": "Leveraging Secondary Storage to Simulate Deep 54-qubit Sycamore Circuits", "url": "https://doi.org/10.1145/3519939.3523439", "note": "Primary classical-computing work showing how the comparison can change with improved simulation."},
-        {"label": "Quantum computational advantage with a programmable photonic processor", "url": "https://doi.org/10.1038/s41586-020-03065-8", "note": "A primary paper using a different sampling platform and verification setting."}
+        {
+          "label": "Quantum supremacy using a programmable superconducting processor",
+          "url": "https://doi.org/10.1038/s41586-019-1666-5",
+          "note": "Primary experimental paper defining a random-circuit sampling comparison."
+        },
+        {
+          "label": "Leveraging Secondary Storage to Simulate Deep 54-qubit Sycamore Circuits",
+          "url": "https://doi.org/10.1145/3519939.3523439",
+          "note": "Primary classical-computing work showing how the comparison can change with improved simulation."
+        },
+        {
+          "label": "Quantum computational advantage with a programmable photonic processor",
+          "url": "https://doi.org/10.1038/s41586-020-03065-8",
+          "note": "A primary paper using a different sampling platform and verification setting."
+        }
       ]
     },
     {
@@ -419,9 +817,21 @@
         }
       ],
       "sources": [
-        {"label": "Surface codes: Towards practical large-scale quantum computation", "url": "https://doi.org/10.1103/PhysRevA.86.032324", "note": "Foundational surface-code review detailing thresholds and resource assumptions."},
-        {"label": "Suppressing quantum errors by scaling a surface code logical qubit", "url": "https://doi.org/10.1038/s41586-022-05434-1", "note": "Primary experimental scaling result and its stated conditions."},
-        {"label": "Quantum error correction below the surface code threshold", "url": "https://doi.org/10.1038/s41586-024-08449-y", "note": "Primary experiment comparing logical performance across code distances."}
+        {
+          "label": "Surface codes: Towards practical large-scale quantum computation",
+          "url": "https://doi.org/10.1103/PhysRevA.86.032324",
+          "note": "Foundational surface-code review detailing thresholds and resource assumptions."
+        },
+        {
+          "label": "Suppressing quantum errors by scaling a surface code logical qubit",
+          "url": "https://doi.org/10.1038/s41586-022-05434-1",
+          "note": "Primary experimental scaling result and its stated conditions."
+        },
+        {
+          "label": "Quantum error correction below the surface code threshold",
+          "url": "https://doi.org/10.1038/s41586-024-08449-y",
+          "note": "Primary experiment comparing logical performance across code distances."
+        }
       ]
     },
     {
@@ -472,9 +882,21 @@
         }
       ],
       "sources": [
-        {"label": "Validating quantum computers using randomized model circuits", "url": "https://doi.org/10.1038/s41567-021-01409-7", "note": "Primary paper describing a flexible volumetric benchmarking framework."},
-        {"label": "Quantum volume", "url": "https://doi.org/10.1103/PhysRevA.102.032420", "note": "Primary definition and analysis of the Quantum Volume benchmark."},
-        {"label": "Application-Oriented Performance Benchmarks for Quantum Computing", "url": "https://doi.org/10.1109/TQE.2022.3144238", "note": "Primary benchmark suite organized around application-motivated circuits."}
+        {
+          "label": "Validating quantum computers using randomized model circuits",
+          "url": "https://doi.org/10.1038/s41567-021-01409-7",
+          "note": "Primary paper describing a flexible volumetric benchmarking framework."
+        },
+        {
+          "label": "Quantum volume",
+          "url": "https://doi.org/10.1103/PhysRevA.102.032420",
+          "note": "Primary definition and analysis of the Quantum Volume benchmark."
+        },
+        {
+          "label": "Application-Oriented Performance Benchmarks for Quantum Computing",
+          "url": "https://doi.org/10.1109/TQE.2022.3144238",
+          "note": "Primary benchmark suite organized around application-motivated circuits."
+        }
       ]
     },
     {
@@ -525,9 +947,21 @@
         }
       ],
       "sources": [
-        {"label": "Quantum Observatory source repository", "url": "https://github.com/seokjw0727/quantum-observatory", "note": "Versioned collection, grouping, aggregation, and validation code."},
-        {"label": "Quantum Observatory collection manifest", "url": "https://qobservatory.com/data/manifest.json", "note": "Current run, build, content, source, and software identity."},
-        {"label": "FAIR Guiding Principles", "url": "https://doi.org/10.1038/sdata.2016.18", "note": "Background principles for findable, accessible, interoperable, and reusable research objects."}
+        {
+          "label": "Quantum Observatory source repository",
+          "url": "https://github.com/seokjw0727/quantum-observatory",
+          "note": "Versioned collection, grouping, aggregation, and validation code."
+        },
+        {
+          "label": "Quantum Observatory collection manifest",
+          "url": "https://qobservatory.com/data/manifest.json",
+          "note": "Current run, build, content, source, and software identity."
+        },
+        {
+          "label": "FAIR Guiding Principles",
+          "url": "https://doi.org/10.1038/sdata.2016.18",
+          "note": "Background principles for findable, accessible, interoperable, and reusable research objects."
+        }
       ]
     }
   ]

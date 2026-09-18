@@ -6,9 +6,10 @@ from pipeline.content import load_articles,load_site_config
 class EditorialContent(unittest.TestCase):
     def test_expected_editorial_collection_is_publishable(self):
         articles=load_articles()
-        self.assertEqual(len(articles),10)
-        self.assertEqual(sum(a['type']=='analysis' for a in articles),4)
-        self.assertEqual(sum(a['type']=='guide' for a in articles),6)
+        paper_readings=[a for a in articles if a.get('paper')]
+        self.assertEqual(len(paper_readings),3)
+        self.assertTrue(all(a.get('paper_ids') and any(s.get('source_indexes') for s in a['sections']) for a in paper_readings))
+        self.assertIn('sorting-papers-without-ranking-quality',{a['slug'] for a in articles})
         self.assertTrue(all(a['status']=='published' for a in articles))
 
     def test_advertising_verification_uses_reviewed_publisher_record(self):

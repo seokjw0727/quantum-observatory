@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 from urllib.parse import urlparse
 
-from .model import ROOT, day
+from .model import ROOT, TOPICS, day
 
 
 ARTICLE_TYPES = {"analysis", "guide"}
@@ -69,4 +69,13 @@ def load_articles():
             parsed = urlparse(source.get("url", ""))
             if parsed.scheme != "https" or not parsed.netloc:
                 raise ValueError(f"Article source must use HTTPS: {slug}")
+        if not set(article.get('topics',[]))<=set(TOPICS):
+            raise ValueError(f'Unknown editorial topic: {slug}')
+        for section in article['sections']:
+            if any(not isinstance(i,int) or not 1<=i<=len(article['sources']) for i in section.get('source_indexes',[])):
+                raise ValueError(f'Invalid section source reference: {slug}')
+        if article.get('paper'):
+            paper=article['paper']
+            if not all(paper.get(key) for key in ['title','authors','year','version','url']) or urlparse(paper['url']).scheme!='https':
+                raise ValueError(f'Incomplete paper focus: {slug}')
     return articles

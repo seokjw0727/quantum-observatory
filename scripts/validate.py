@@ -24,7 +24,7 @@ def validate(directory,production=False):
     root=Path(directory)
     articles=load_articles();site=load_site_config()
     routes=['index.html','research/index.html','archive/index.html','methodology/index.html','analysis/index.html','guides/index.html',
-            'about/index.html','contact/index.html','editorial-policy/index.html','privacy/index.html','terms/index.html','404.html','_headers','robots.txt','sitemap.xml']
+            'about/index.html','contact/index.html','editorial-policy/index.html','privacy/index.html','terms/index.html','topics/error-correction/index.html','404.html','_headers','robots.txt','sitemap.xml']
     routes += [article_path(article).strip('/')+'/index.html' for article in articles]
     for path in routes:
         assert (root/path).is_file(),f'Missing {path}'

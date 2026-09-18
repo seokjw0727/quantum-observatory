@@ -50,6 +50,22 @@ export function dayKey(value) {
 export function effectiveDate(record) {
   return PAPER_KINDS.has(record.kind) ? record.first_published : record.date;
 }
+export const SORTS = {
+  latest: "Year · newest first",
+  oldest: "Year · oldest first",
+  citations: "Citations · most first",
+  title: "Title · A–Z",
+};
+export function normalizeSort(value) {
+  return ({ cite: "citations", year: "latest" })[value] ||
+    (Object.hasOwn(SORTS, value) ? value : "latest");
+}
+export function publicationYear(record) {
+  return record.publication_year || Number((effectiveDate(record) || "").slice(0, 4)) || null;
+}
+export function citationCount(record) {
+  return Number.isSafeInteger(record.citations) && record.citations >= 0 ? record.citations : null;
+}
 export function matches(record, filters = {}) {
   if (filters.topic && !(record.topics || []).includes(filters.topic))
     return false;
@@ -57,6 +73,7 @@ export function matches(record, filters = {}) {
   if (filters.kind && filters.kind !== "papers" && record.kind !== filters.kind)
     return false;
   if (filters.source && record.source !== filters.source) return false;
+  if (filters.year && String(publicationYear(record)) !== String(filters.year)) return false;
   const date = dayKey(
     filters.dateBasis === "discovered"
       ? record.observed_at
@@ -91,13 +108,21 @@ export function selectRecords(records, filters = {}) {
       if (!old.abstract && r.abstract) old.abstract = r.abstract;
     }
   }
-  return [...groups.values()].sort((a, b) =>
-    filters.sort === "title"
-      ? a.title.localeCompare(b.title)
-      : (dayKey(effectiveDate(b)) || "").localeCompare(
-          dayKey(effectiveDate(a)) || "",
-        ) || a.title.localeCompare(b.title),
-  );
+  const mode = normalizeSort(filters.sort);
+  const dateOrder = (a, b, direction = -1) => {
+    const ay = publicationYear(a), by = publicationYear(b);
+    if (ay === null || by === null) return ay === by ? 0 : ay === null ? 1 : -1;
+    return direction * (ay - by || (dayKey(effectiveDate(a)) || "").localeCompare(dayKey(effectiveDate(b)) || ""));
+  };
+  return [...groups.values()].sort((a, b) => {
+    let order = 0;
+    if (mode === "citations") {
+      const ac = citationCount(a), bc = citationCount(b);
+      order = ac === null || bc === null ? (ac === bc ? 0 : ac === null ? 1 : -1) : bc - ac;
+      order ||= dateOrder(a, b);
+    } else if (mode !== "title") order = dateOrder(a, b, mode === "oldest" ? 1 : -1);
+    return order || a.title.localeCompare(b.title) || a.id.localeCompare(b.id);
+  });
 }
 export function dateLabel(value, options = {}) {
   if (!value) return "Date unavailable";
@@ -128,6 +153,10 @@ export function toCSV(records) {
       "First public / event date",
       "Source",
       "Topics",
+      "Publication year (earliest known)",
+      "Indexed citations",
+      "Citation source",
+      "Citations retrieved at",
       "URL",
     ],
     ...records.map((r) => [
@@ -137,6 +166,10 @@ export function toCSV(records) {
       dayKey(effectiveDate(r)),
       r.source,
       r.topics.join("; "),
+      publicationYear(r) ?? "",
+      citationCount(r) ?? "",
+      r.citations_source || "",
+      r.citations_as_of || "",
       r.url,
     ]),
   ]

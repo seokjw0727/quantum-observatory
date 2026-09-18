@@ -7,7 +7,7 @@ from unittest.mock import patch
 from argparse import Namespace
 
 from pipeline.model import make_record,merge_records,group_works,doi_id,arxiv_id,day,week_start,validate,clean
-from pipeline.adapters import parse_arxiv,parse_crossref,parse_qip,parse_gao,parse_nqi,parse_osti,collect_osti,collect_configured_report,enrich_openalex
+from pipeline.adapters import parse_arxiv,parse_crossref,parse_qip,parse_gao,parse_nqi,parse_osti,collect_arxiv,collect_osti,collect_configured_report,enrich_openalex
 from pipeline.aggregate import aggregate
 from pipeline.collect import collect,save_records,read_records
 from pipeline.render import shell
@@ -79,6 +79,37 @@ class DataIntegrity(unittest.TestCase):
         r=parse_crossref([{'DOI':'10.1234/a','title':['Quantum channels'],'published':{'date-parts':[[2026,9]]}}],NOW)[0]
         self.assertIsNone(r['published_at']);self.assertEqual(r['date_precision'],'month')
 
+    def test_linked_citations_keep_one_provider_and_retrieval_date(self):
+        a=paper(doi='10.1234/linked',enrichment={'citations':0,'as_of':NOW})
+        b=paper('crossref','10.1234/linked',doi='10.1234/linked',citations=19,citations_as_of=NOW)
+        result=aggregate([a,b],self.state())
+        for r in result['records']:
+            self.assertEqual(r['citations'],0)
+            self.assertEqual(r['citations_source'],'OpenAlex')
+            self.assertEqual(r['citations_as_of'],NOW)
+
+    def test_journal_only_year_is_retained_and_unknown_citations_are_null(self):
+        r=parse_crossref([{'DOI':'10.1234/year','title':['Quantum channels'],'published':{'date-parts':[[2024]]}}],NOW)[0]
+        indexed=aggregate([r],self.state())['records'][0]
+        self.assertEqual(indexed['publication_year'],2024)
+        self.assertIsNone(indexed['first_published'])
+        self.assertIsNone(indexed['citations'])
+        self.assertIsNone(indexed['citations_source'])
+
+    def test_openalex_budget_counts_unique_dois_and_refreshes_oldest(self):
+        class Stub:
+            def get(self,url,params,headers):
+                self.params=params
+                return json.dumps({'results':[{'id':'https://openalex.org/W1','doi':'https://doi.org/10.1234/old','cited_by_count':8,'authorships':[]}]})
+        old=paper('crossref','old',doi='10.1234/old',enrichment={'citations':3,'as_of':'2026-01-01'})
+        duplicate=paper('arxiv','duplicate',doi='10.1234/old',enrichment={'citations':3,'as_of':'2026-01-01'})
+        newer=paper('crossref','new',doi='10.1234/new',enrichment={'citations':4,'as_of':'2026-09-01'})
+        fetcher=Stub()
+        with patch.dict('os.environ',{},clear=True):
+            rows,_=enrich_openalex([newer,old,duplicate],dict(keyless_max_enrichment=1),NOW,fetcher)
+        self.assertEqual(fetcher.params['filter'],'doi:https://doi.org/10.1234/old')
+        self.assertEqual([r['enrichment']['citations'] for r in rows],[4,8,8])
+
     def test_crossref_missing_year_is_unknown_instead_of_crashing(self):
         r=parse_crossref([{'DOI':'10.1234/a','title':['Quantum channels'],'published':{'date-parts':[[None]]}}],NOW)[0]
         self.assertIsNone(r['published_at']);self.assertEqual(r['date_precision'],'unknown')
@@ -90,6 +121,33 @@ class DataIntegrity(unittest.TestCase):
 
     def test_arxiv_invalid_response_is_not_zero_papers(self):
         with self.assertRaises(ValueError):parse_arxiv(b'<feed/>',NOW)
+
+    def test_arxiv_updated_old_submission_is_kept_at_korean_date_boundary(self):
+        revision=paper(published_at='2020-01-01T00:00:00Z',updated_at='2026-08-31T15:00:00Z',version=3)
+        older=paper(sid='2608.00002',updated_at='2026-08-31T14:59:59Z')
+        class Stub:
+            def get(self,url,params):
+                self.params=params
+                return b'feed'
+        fetcher=Stub()
+        with patch('pipeline.adapters.parse_arxiv',return_value=([revision,older],100000)):
+            rows=collect_arxiv(dict(page_size=2,max_pages=1),date(2026,9,1),NOW,fetcher)
+        self.assertEqual(rows,[revision])
+        self.assertEqual(fetcher.params['search_query'],'cat:quant-ph')
+        self.assertEqual(fetcher.params['sortBy'],'lastUpdatedDate')
+
+    def test_openalex_unmatched_dois_do_not_starve_the_remaining_budget(self):
+        class Stub:
+            def get(self,url,params,headers):
+                self.filters=getattr(self,'filters',[])+[params['filter']]
+                return json.dumps({'results':[]})
+        rows=[paper('crossref','a',doi='10.1234/a'),paper('crossref','b',doi='10.1234/b')]
+        fetcher=Stub()
+        with patch.dict('os.environ',{},clear=True):
+            rows,_=enrich_openalex(rows,dict(keyless_max_enrichment=1),NOW,fetcher)
+            rows,_=enrich_openalex(rows,dict(keyless_max_enrichment=1),'2026-09-08T00:00:00Z',fetcher)
+        self.assertEqual(fetcher.filters,['doi:https://doi.org/10.1234/a','doi:https://doi.org/10.1234/b'])
+        self.assertTrue(all(not r.get('enrichment') for r in rows))
 
     def test_osti_filters_product_type_and_retains_calendar_date(self):
         items=[dict(osti_id='1',title='Quantum algorithms',product_type='Technical Report',publication_date='2026-09-01T00:00:00Z'),

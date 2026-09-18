@@ -28,7 +28,7 @@ class Fetcher:
         if not safe_url(url):
             raise ValueError('Unsupported source URL')
         host = urllib.parse.urlparse(url).hostname
-        interval = 3.1 if 'arxiv.org' in host else 0.25
+        interval = 10 if 'arxiv.org' in host else 0.25
         # Cache is scoped to one collection run; it is never a durable checkpoint.
         target = self.cache_dir / hashlib.sha256(url.encode()).hexdigest()
         if target.exists():
@@ -88,6 +88,8 @@ def parse_arxiv(body, now):
 def collect_arxiv(source, start, now, fetcher, initial=False):
     result=[];size=source.get('page_size',1000)
     for page in range(source.get('max_pages',30)):
+        # lastUpdatedDate is a documented sort key, not a query date filter.
+        # Scan recent updates so revisions of older submissions are retained.
         query=source.get('query','cat:quant-ph')
         body=fetcher.get('https://export.arxiv.org/api/query',dict(search_query=query,start=page*size,
                          max_results=size,sortBy='lastUpdatedDate',sortOrder='descending'))
@@ -126,7 +128,7 @@ def parse_crossref(items, now):
             published_at=published if precision=='day' else None,published_label=published,date_precision=precision,
             updated_at=item.get('indexed',{}).get('date-time'),doi=doi,arxiv_id=aid,
             venue=(item.get('container-title') or ['Journal'])[0],
-            citations=item.get('is-referenced-by-count'),citations_as_of=now,
+            citations=item.get('is-referenced-by-count'),citations_as_of=now,citations_source='Crossref',
             events=[{'type':'journal_publication','date':published}] if precision=='day' else [],
             provenance={'method':'crossref-rest','retrieved_at':now})
         result.append(r)
@@ -323,11 +325,16 @@ def collect_osti(source,start,now,fetcher,initial=False):
 def enrich_openalex(records,source,now,fetcher):
     key=os.environ.get('OPENALEX_API_KEY')
     limit=source.get('max_enrichment',100) if key else source.get('keyless_max_enrichment',25)
-    eligible=[r for r in records if r.get('doi') and not r.get('enrichment')][:limit]
+    # Rotate through unique DOIs, refreshing the oldest snapshots first. A failed
+    # request leaves the last successful measurement and its actual date intact.
+    by_record_doi={}
+    for r in records:
+        if r.get('doi'):by_record_doi.setdefault(r['doi'],[]).append(r)
+    eligible=sorted(by_record_doi,key=lambda doi:(max(max(r.get('enrichment_checked_at',''),(r.get('enrichment') or {}).get('as_of','')) for r in by_record_doi[doi]),doi))[:limit]
     by_doi={}
     for i in range(0,len(eligible),100):
         batch=eligible[i:i+100]
-        params={'filter':'doi:'+'|'.join('https://doi.org/'+r['doi'] for r in batch),'per_page':100,
+        params={'filter':'doi:'+'|'.join('https://doi.org/'+doi for doi in batch),'per_page':100,
                 'select':'id,doi,cited_by_count,authorships'}
         headers={'Authorization':'Bearer '+key} if key else None
         data=json.loads(fetcher.get('https://api.openalex.org/works',params,headers))
@@ -335,6 +342,7 @@ def enrich_openalex(records,source,now,fetcher):
             by_doi[doi_id(work.get('doi'))]={'openalex_id':work['id'],'citations':work.get('cited_by_count'),
                 'as_of':now,'institutions':sorted({v['display_name'] for a in work.get('authorships',[]) for v in a.get('institutions',[])})}
     for r in records:
+        if r.get('doi') in eligible:r['enrichment_checked_at']=now
         if r.get('doi') in by_doi:r['enrichment']=by_doi[r['doi']]
     message='DOI metadata enrichment; bounded per-run budget.' if key else 'Keyless DOI metadata enrichment; limited per-run budget.'
     return records,{'status':'success','message':message,'fetched':len(by_doi),'last_success':now}

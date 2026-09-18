@@ -45,7 +45,9 @@ jobs:
       - name: Test data invariants
         run: npm test
       - name: Collect source metadata
-        if: github.event_name != 'workflow_dispatch' || inputs.collect
+        # Publish code/content fixes from the last durable snapshot even if a
+        # scholarly API is rate limited. Scheduled/manual collection stays strict.
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.collect)
         env:
           CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
           OPENALEX_API_KEY: ${{ secrets.OPENALEX_API_KEY }}
@@ -58,7 +60,7 @@ jobs:
           node --check web/assets/core.js
           python3 scripts/validate.py --production
       - name: Persist successful source checkpoints
-        if: github.event_name != 'workflow_dispatch' || inputs.collect
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.collect)
         run: python3 scripts/git_data.py persist
       - uses: actions/upload-artifact@v4
         with:
