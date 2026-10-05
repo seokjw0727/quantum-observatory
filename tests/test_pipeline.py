@@ -7,7 +7,7 @@ from unittest.mock import patch
 from argparse import Namespace
 
 from pipeline.model import make_record,merge_records,group_works,doi_id,arxiv_id,day,week_start,validate,clean
-from pipeline.adapters import parse_arxiv,parse_crossref,parse_qip,parse_gao,parse_nqi,parse_osti,collect_arxiv,collect_osti,collect_configured_report,enrich_openalex
+from pipeline.adapters import parse_arxiv,parse_arxiv_oai,parse_crossref,parse_qip,parse_gao,parse_nqi,parse_osti,collect_arxiv,collect_osti,collect_configured_report,enrich_openalex
 from pipeline.aggregate import aggregate
 from pipeline.collect import collect,save_records,read_records
 from pipeline.render import shell
@@ -130,6 +130,37 @@ class DataIntegrity(unittest.TestCase):
     def test_arxiv_invalid_response_is_not_zero_papers(self):
         with self.assertRaises(ValueError):parse_arxiv(b'<feed/>',NOW)
 
+    def test_arxiv_406_uses_official_oai_with_revision_metadata(self):
+        body=b'''<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/">
+          <ListRecords><record><header><identifier>oai:arXiv.org:2404.19659</identifier>
+          <datestamp>2026-09-28</datestamp></header><metadata>
+          <arXivRaw xmlns="http://arxiv.org/OAI/arXivRaw/"><id>2404.19659</id>
+          <version version="v1"><date>Tue, 30 Apr 2024 15:56:16 GMT</date></version>
+          <version version="v2"><date>Fri, 25 Sep 2026 15:10:10 GMT</date></version>
+          <title>Quantum error correction for logical qubits</title><authors>Alice, Bob and Carol</authors>
+          <categories>quant-ph cs.ET</categories><abstract>Correcting quantum errors</abstract>
+          </arXivRaw></metadata></record><resumptionToken></resumptionToken></ListRecords></OAI-PMH>'''
+        rows,token=parse_arxiv_oai(body,NOW)
+        self.assertIsNone(token);self.assertEqual(len(rows),1)
+        self.assertEqual(rows[0]['arxiv_id'],'2404.19659')
+        self.assertEqual(rows[0]['version'],2)
+        self.assertEqual(rows[0]['authors'],['Alice','Bob','Carol'])
+        self.assertEqual(rows[0]['categories'],['quant-ph','cs.ET'])
+        self.assertEqual(rows[0]['events'][0]['type'],'revision')
+        class Fetcher:
+            def get(self,url,params):
+                if 'export.arxiv.org' in url:raise RuntimeError('export.arxiv.org: HTTP 406')
+                self.params=params
+                return body
+        fetcher=Fetcher()
+        self.assertEqual(collect_arxiv(dict(max_pages=2),date(2026,9,1),NOW,fetcher),rows)
+        self.assertEqual(fetcher.params['set'],'physics:quant-ph')
+
+    def test_arxiv_oai_rejects_malformed_response_and_unknown_error(self):
+        with self.assertRaises(ValueError):parse_arxiv_oai(b'<feed/>',NOW)
+        with self.assertRaises(ValueError):parse_arxiv_oai(
+            b'<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"><error code="badArgument"/></OAI-PMH>',NOW)
+
     def test_arxiv_updated_old_submission_is_kept_at_korean_date_boundary(self):
         revision=paper(published_at='2020-01-01T00:00:00Z',updated_at='2026-08-31T15:00:00Z',version=3)
         older=paper(sid='2608.00002',updated_at='2026-08-31T14:59:59Z')
@@ -212,6 +243,24 @@ class DataIntegrity(unittest.TestCase):
             with patch('pipeline.collect.ADAPTERS',{'arxiv':lambda *a,**k:(_ for _ in ()).throw(RuntimeError('offline'))}):
                 code=collect(Namespace(data_dir=directory,weeks=12,sources='arxiv',as_of=NOW))
             self.assertEqual(code,1);self.assertEqual(state.read_bytes(),before);self.assertEqual(read_records(directory),[a])
+
+    def test_established_arxiv_failure_keeps_checkpoint_and_publishes_crossref(self):
+        with tempfile.TemporaryDirectory() as directory:
+            old=paper();save_records(directory,[old])
+            checkpoint='2026-09-01T00:17:00+00:00'
+            state=Path(directory)/'state.json'
+            state.write_text(json.dumps(dict(last_success=checkpoint,sources={
+                'arxiv':dict(last_success=checkpoint,covered_from='2026-06-01')})))
+            fresh=paper('crossref','10.1234/new',doi='10.1234/new')
+            def offline(*args,**kwargs):raise RuntimeError('export.arxiv.org: HTTP 406')
+            with patch('pipeline.collect.ADAPTERS',{'arxiv':offline,'crossref':lambda *a,**k:[fresh]}):
+                code=collect(Namespace(data_dir=directory,weeks=12,sources='arxiv,crossref',as_of=NOW))
+            self.assertEqual(code,0)
+            result=json.loads(state.read_text())
+            self.assertEqual(result['status'],'partial')
+            self.assertEqual(result['sources']['arxiv']['last_success'],checkpoint)
+            self.assertEqual(result['sources']['crossref']['status'],'success')
+            self.assertEqual({r['id'] for r in read_records(directory)},{old['id'],fresh['id']})
 
 
 if __name__=='__main__':unittest.main()

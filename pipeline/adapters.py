@@ -9,6 +9,7 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime
+from email.utils import parsedate_to_datetime
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -85,7 +86,69 @@ def parse_arxiv(body, now):
     return records,int(total)
 
 
+OAI = {'o':'http://www.openarchives.org/OAI/2.0/','r':'http://arxiv.org/OAI/arXivRaw/'}
+
+
+def parse_arxiv_oai(body, now):
+    root=ET.fromstring(body)
+    if root.tag!='{'+OAI['o']+'}OAI-PMH':raise ValueError('Unexpected arXiv OAI response')
+    error=root.find('o:error',OAI)
+    if error is not None:
+        if error.get('code')=='noRecordsMatch':return [],None
+        raise ValueError('arXiv OAI error: '+str(error.get('code')))
+    listing=root.find('o:ListRecords',OAI)
+    if listing is None:raise ValueError('arXiv OAI response missing ListRecords')
+    records=[]
+    for item in listing.findall('o:record',OAI):
+        header=item.find('o:header',OAI)
+        if header is None:raise ValueError('arXiv OAI record missing header')
+        if header.get('status')=='deleted':continue
+        metadata=item.find('o:metadata/r:arXivRaw',OAI)
+        if metadata is None:raise ValueError('arXiv OAI record missing metadata')
+        aid=arxiv_id(metadata.findtext('r:id',namespaces=OAI))
+        title=metadata.findtext('r:title',namespaces=OAI)
+        versions=metadata.findall('r:version',OAI)
+        if not aid or not title or not versions:raise ValueError('arXiv OAI record incomplete')
+        dates=[parsedate_to_datetime(v.findtext('r:date',namespaces=OAI)).isoformat() for v in versions]
+        version=int(versions[-1].get('version','v1').lstrip('v'))
+        author_text=metadata.findtext('r:authors',default='',namespaces=OAI)
+        authors=[clean(a.removeprefix('and ')) for a in re.split(r',\s*|\s+and\s+',author_text) if clean(a)]
+        records.append(make_record('arxiv',aid,title,'preprint','https://arxiv.org/abs/'+aid,now,
+            authors=authors,
+            abstract=clean(metadata.findtext('r:abstract',default='',namespaces=OAI)),
+            published_at=dates[0],updated_at=dates[-1],arxiv_id=aid,
+            doi=metadata.findtext('r:doi',namespaces=OAI),venue='arXiv',version=version,
+            categories=(metadata.findtext('r:categories',default='',namespaces=OAI)).split(),
+            events=[{'type':'revision','date':dates[-1],'version':version}] if version>1 else [],
+            provenance={'method':'arxiv-oai-raw','retrieved_at':now}))
+    token=listing.find('o:resumptionToken',OAI)
+    return records,(token.text.strip() if token is not None and token.text else None)
+
+
+def collect_arxiv_oai(source,start,now,fetcher):
+    result=[];token=None;seen=set()
+    for page in range(source.get('max_pages',30)):
+        params={'verb':'ListRecords','resumptionToken':token} if token else {
+            'verb':'ListRecords','metadataPrefix':'arXivRaw','set':'physics:quant-ph','from':start.isoformat()}
+        rows,token=parse_arxiv_oai(fetcher.get('https://oaipmh.arxiv.org/oai',params),now)
+        result.extend(rows)
+        if not token:return result
+        if token in seen:raise ValueError('arXiv OAI repeated a resumption token')
+        seen.add(token)
+    raise ValueError('arXiv OAI page limit reached; checkpoint was not advanced')
+
+
 def collect_arxiv(source, start, now, fetcher, initial=False):
+    try:
+        return collect_arxiv_api(source,start,now,fetcher)
+    except RuntimeError as error:
+        if str(error)!='export.arxiv.org: HTTP 406':raise
+        # The legacy API can reject cloud runners; OAI-PMH is arXiv's official
+        # incremental metadata interface, including revisions of older papers.
+        return collect_arxiv_oai(source,start,now,fetcher)
+
+
+def collect_arxiv_api(source, start, now, fetcher):
     result=[];size=source.get('page_size',1000)
     for page in range(source.get('max_pages',30)):
         # lastUpdatedDate is a documented sort key, not a query date filter.

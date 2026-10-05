@@ -94,12 +94,12 @@ No deployed URL is implied by the source bundle. Account configuration and a suc
 - Reporting boundary: Monday 00:00 KST, with an exclusive next-Monday end.
 - First run: 12-week backfill; conferences and configured report pages may include older records.
 - Subsequent runs: source-specific successful checkpoint minus 14 days. Early-month runs revisit at least 12 weeks.
-- Required-source failure: successful checkpoints and published data remain unchanged; diagnostics are retained as a workflow artifact.
+- Required-source failure: a first harvest, a missing prior checkpoint, or the failure of every paper source blocks publication. Once a required source has a durable checkpoint and records, another successful paper source may publish a partial snapshot; the failed source's records and checkpoint are retained, and incomplete coverage is shown in Methodology.
 - Optional-source failure: other records may publish, with missing coverage shown in Methodology.
 - Production data is persisted only after a valid build. An upload failure can be retried without collecting again.
 - GitHub scheduled events may be delayed, dropped, or disabled after long inactivity in public repositories. Manual dispatch remains available. The UI marks snapshots older than eight days as overdue.
 
-To rebuild/deploy code changes without recollecting: manually run **Collect and publish**, set `collect` to false, and leave `deploy` true. A push to `master` that changes the application, pipeline, configuration, content, deployment scripts, or publication workflow restores the last durable snapshot and publishes a validated rebuild without recollection. This lets content and code fixes deploy while a scholarly API is rate limited. Scheduled and explicit manual collection still requires successful required sources before records or checkpoints advance. Deployment runs when the Cloudflare variables and secret are configured. Documentation-only and test-only pushes run code validation without publishing.
+To rebuild/deploy code changes without recollecting: manually run **Collect and publish**, set `collect` to false, and leave `deploy` true. A push to `master` that changes the application, pipeline, configuration, content, deployment scripts, or publication workflow restores the last durable snapshot and publishes a validated rebuild without recollection. This lets content and code fixes deploy while a scholarly API is rate limited. Scheduled and explicit manual collection retain the previous checkpoint for any failed source; successful sources can advance when partial publication is safe. Deployment runs when the Cloudflare variables and secret are configured. Documentation-only and test-only pushes run code validation without publishing.
 
 ## Counting and scientific limitations
 
@@ -159,4 +159,4 @@ Sorting runs across all matching grouped results before paging. Year is the earl
 
 The production build versions every relative ES-module import as well as HTML entry points. This prevents a newly deployed app from importing a previously cached core module with an older export set. Artifact validation requires matching dependency versions and existing module targets.
 
-The arXiv adapter sorts by lastUpdatedDate, stops after the checkpoint overlap, and spaces API requests by at least ten seconds. It preserves revisions of older submissions rather than restricting submission dates. HTTP 429 still blocks required-source publication rather than becoming an empty successful result. Code/content deployment remains independent of collection.
+The arXiv adapter sorts by lastUpdatedDate, stops after the checkpoint overlap, and spaces API requests by at least ten seconds. If that API rejects the runner, the adapter uses arXiv's official OAI-PMH incremental metadata feed for quant-ph, including version history. A failed API and OAI attempt is reported as failed, never as zero papers; a partial publication can proceed only under the durable-checkpoint rule above. Code/content deployment remains independent of collection.

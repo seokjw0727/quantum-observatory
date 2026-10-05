@@ -70,11 +70,22 @@ def collect(args):
             print(f'{sid}: {status["status"]} ({len(rows)} included)',flush=True)
     for s in sources:
         if not s['enabled']:outcomes[s['id']]={'status':'disabled','message':'Disabled in configuration.','fetched':0}
-    fatal=[s['id'] for s in sources if s['enabled'] and s['required'] and outcomes.get(s['id'],{}).get('status')!='success']
+    failed_required=[s['id'] for s in sources if s['enabled'] and s['required'] and outcomes.get(s['id'],{}).get('status')!='success']
+    # An established source can retain its previous records/checkpoint while a
+    # different paper source publishes new work. A first harvest still fails closed.
+    successful_paper_source=any(s['enabled'] and s['kind'] in {'preprint','journal_article'} and
+        outcomes.get(s['id'],{}).get('status')=='success' for s in sources)
+    recoverable=successful_paper_source and all(
+        previous.get('sources',{}).get(sid,{}).get('last_success') and
+        any(record['source']==sid for record in old) for sid in failed_required)
+    fatal=failed_required if failed_required and not recoverable else []
     if fatal:
         atomic_json(directory/'last-attempt.json',dict(run_id=run_id,attempted_at=stamp,status='failed',sources=outcomes))
-        print('Required sources failed; published records and successful checkpoints were preserved.',file=sys.stderr)
+        print('Required sources failed without a safe partial publication; records and checkpoints were preserved.',file=sys.stderr)
         return 1
+    if failed_required:
+        print('::warning::Partial collection: '+', '.join(failed_required)+
+              ' failed; its previous records and checkpoint are retained.',flush=True)
     overrides=json.loads((ROOT/'config/overrides.json').read_text(encoding='utf-8'))
     records=merge_records(old,incoming,overrides)
     for source in sources:
