@@ -1,7 +1,9 @@
 import json
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from datetime import date
+from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 from argparse import Namespace
@@ -253,9 +255,11 @@ class DataIntegrity(unittest.TestCase):
                 'arxiv':dict(last_success=checkpoint,covered_from='2026-06-01')})))
             fresh=paper('crossref','10.1234/new',doi='10.1234/new')
             def offline(*args,**kwargs):raise RuntimeError('export.arxiv.org: HTTP 406')
-            with patch('pipeline.collect.ADAPTERS',{'arxiv':offline,'crossref':lambda *a,**k:[fresh]}):
+            output=StringIO()
+            with patch('pipeline.collect.ADAPTERS',{'arxiv':offline,'crossref':lambda *a,**k:[fresh]}),redirect_stdout(output):
                 code=collect(Namespace(data_dir=directory,weeks=12,sources='arxiv,crossref',as_of=NOW))
             self.assertEqual(code,0)
+            self.assertIn('::warning::Partial collection',output.getvalue())
             result=json.loads(state.read_text())
             self.assertEqual(result['status'],'partial')
             self.assertEqual(result['sources']['arxiv']['last_success'],checkpoint)
