@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "run_id": "20261109T064904Z",
+  "last_success": "2026-11-09T06:49:04.198056+00:00",
+  "sources": {
+    "qip2026": {
+      "status": "success",
+      "fetched": 158,
+      "included": 158,
+      "last_success": "2026-11-09T06:49:04.198056+00:00",
+      "covered_from": "2026-06-08",
+      "message": "Completed",
+      "query_from": "2026-10-19"
+    },
+    "nqi": {
+      "status": "success",
+      "fetched": 66,
+      "included": 66,
+      "last_success": "2026-11-09T06:49:04.198056+00:00",
+      "covered_from": "2026-06-08",
+      "message": "Completed",
+      "query_from": "2026-10-19"
+    },
+    "gao": {
+      "status": "success",
+      "fetched": 1,
+      "included": 1,
+      "last_success": "2026-11-09T06:49:04.198056+00:00",
+      "covered_from": "2026-06-08",
+      "message": "Completed",
+      "query_from": "2026-10-19"
+    },
+    "osti": {
+      "status": "success",
+      "fetched": 3,
+      "included": 3,
+      "last_success": "2026-11-09T06:49:04.198056+00:00",
+      "covered_from": "2026-06-08",
+      "message": "Completed",
+      "query_from": "2026-09-28"
+    },
+    "crossref": {
+      "status": "success",
+      "fetched": 1857,
+      "included": 1016,
+      "last_success": "2026-11-09T06:49:04.198056+00:00",
+      "covered_from": "2026-06-08",
+      "message": "Completed",
+      "query_from": "2026-10-19"
+    },
+    "arxiv": {
+      "status": "success",
+      "fetched": 2261,
+      "included": 1834,
+      "last_success": "2026-11-09T06:49:04.198056+00:00",
+      "covered_from": "2026-06-08",
+      "message": "Completed",
+      "query_from": "2026-10-19"
+    },
+    "openalex": {
+      "status": "success",
+      "message": "Keyless DOI metadata enrichment; limited per-run budget.",
+      "fetched": 25,
+      "last_success": "2026-11-09T06:49:04.198056+00:00"
+    }
+  },
+  "record_count": 14299,
+  "content_hash": "1c33675ec2d07d0d7e52a90eb4468e529734713152207bcf2d0f45dfe4a45168",
+  "code_sha": "3e4aadc0c3bbd49b743ab044c8b2f899dc1da6d8",
+  "baseline": "2026-08-17",
+  "initial_backfill": false,
+  "status": "success"
+}
